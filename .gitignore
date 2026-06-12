@@ -1,0 +1,31 @@
+# Dependencies and package caches
+node_modules/
+.npm-cache/
+
+# Local Cloudflare/Wrangler state
+.wrangler/
+worker/.wrangler/
+worker/.dev.vars
+
+# Python caches and virtual environments
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+scf_build_v2/
+
+# Local environment files
+.env
+.env.*
+!.env.example
+
+# Build/deploy archives
+*.zip
+
+# Logs and local OS/editor files
+*.log
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

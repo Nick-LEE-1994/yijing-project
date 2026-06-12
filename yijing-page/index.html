@@ -1,0 +1,1171 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>遇事不决·可问清风</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;600&family=Noto+Sans+SC:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f3efe6;
+  --bg-quiet:#eee7db;
+  --paper:#fffdf8;
+  --paper-soft:#fbf7ee;
+  --ink:#29231d;
+  --ink-light:#6b5f52;
+  --ink-faint:#9c9081;
+  --vermillion:#b94348;
+  --vermillion-dark:#96353b;
+  --vermillion-light:#e7b8b9;
+  --vermillion-bg:rgba(185,67,72,.07);
+  --gold:#a87818;
+  --gold-light:#ead4a0;
+  --gold-bg:rgba(168,120,24,.09);
+  --border:#ded5c6;
+  --border-light:#ebe4d8;
+  --shadow:0 18px 55px rgba(73,54,35,.08);
+  --green-pine:#4f7355;
+  --green-light:#d6e5cf;
+}
+html{scroll-behavior:smooth}
+body{
+  font-family:'Noto Sans SC',sans-serif;
+  background:
+    linear-gradient(180deg,rgba(255,253,248,.78),rgba(243,239,230,.9) 42%,var(--bg)),
+    var(--bg);
+  color:var(--ink);
+  line-height:1.8;
+  min-height:100vh;
+  overflow-x:hidden;
+}
+button,input,textarea{font:inherit}
+
+/* ===== INPUT STATE ===== */
+#input-state{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:5rem 1.25rem 3rem;transition:opacity .5s,transform .5s}
+#input-state.fade-out{opacity:0;transform:translateY(-20px);pointer-events:none}
+
+.page-title{font-family:'Noto Serif SC',serif;font-size:clamp(2rem,4vw,3.15rem);font-weight:500;color:var(--ink);letter-spacing:.18em;margin:0 0 .45rem;text-align:center}
+.page-subtitle{font-size:.9rem;color:var(--ink-light);letter-spacing:.16em;margin-bottom:2rem;text-align:center}
+.page-subtitle::after{content:'';display:block;width:42px;height:2px;background:var(--vermillion);margin:1rem auto 0;border-radius:2px;opacity:.75}
+
+.input-box{width:100%;max-width:560px;background:rgba(255,253,248,.72);border:1px solid rgba(222,213,198,.8);border-radius:8px;padding:.65rem;box-shadow:var(--shadow)}
+.question-categories{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:.35rem;margin:0 0 .55rem}
+.category-chip{min-height:34px;border:1px solid var(--border-light);border-radius:6px;background:rgba(255,253,248,.72);color:var(--ink-light);font-size:.78rem;cursor:pointer;transition:border-color .2s,background .2s,color .2s}
+.category-chip:hover,.category-chip.active{border-color:var(--vermillion-light);background:var(--vermillion-bg);color:var(--vermillion)}
+.input-box textarea{width:100%;min-height:132px;padding:1.25rem 1.35rem;border:1px solid var(--border-light);border-radius:6px;background:var(--paper);font-family:'Noto Serif SC',serif;font-size:1rem;color:var(--ink);resize:vertical;outline:none;transition:border-color .25s,box-shadow .25s;line-height:1.9}
+.input-box textarea:focus{border-color:var(--vermillion-light);box-shadow:0 0 0 3px rgba(185,67,72,.08)}
+.input-box textarea::placeholder{color:var(--ink-faint)}
+
+.btn-divine{display:block;margin:1rem auto .1rem;padding:.78rem 3.2rem;background:var(--vermillion);color:#fff;border:none;border-radius:6px;font-family:'Noto Serif SC',serif;font-size:1.05rem;letter-spacing:.22em;cursor:pointer;box-shadow:0 10px 24px rgba(185,67,72,.22);transition:background .25s,transform .15s,box-shadow .25s}
+.btn-divine:hover{background:var(--vermillion-dark);box-shadow:0 12px 28px rgba(150,53,59,.25)}
+.btn-divine:active{transform:scale(.97)}
+.btn-divine:disabled{opacity:.5;cursor:not-allowed}
+
+.input-hint{text-align:center;margin-top:1.25rem;font-size:.78rem;color:var(--ink-faint);letter-spacing:.05em}
+
+
+/* ===== LOADING STATE ===== */
+#loading-state{display:none;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:2rem}
+#loading-state.show{display:flex}
+
+.loading-hexagram{position:relative;width:80px;height:200px;margin-bottom:1.6rem}
+.loading-yao{position:absolute;left:0;width:80px;height:6px;border-radius:2px;background:var(--border-light);opacity:0;transform:scaleX(0);transition:all .4s ease}
+.loading-yao.yang{background:var(--ink)}
+.loading-yao.yin::after{content:'';position:absolute;left:50%;transform:translateX(-50%);width:10px;height:6px;background:var(--bg)}
+.loading-yao.visible{opacity:1;transform:scaleX(1)}
+.loading-yao.moving{background:var(--vermillion)}
+
+.loading-text{font-family:'Noto Serif SC',serif;font-size:.9rem;color:var(--ink-light);letter-spacing:.15em;opacity:0;transition:opacity .6s}
+.loading-text.show{opacity:1}
+
+/* ===== RESULT STATE ===== */
+#result-state{display:none;width:min(100%,900px);margin:0 auto;padding:2rem 1.25rem 4.5rem;position:relative}
+#result-state.show{display:block;animation:fadeIn .5s ease}
+
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeInUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+
+.result-intro{margin:0 0 1rem;padding:1.1rem 1.25rem;border:1px solid var(--border);border-radius:8px;background:rgba(255,253,248,.62)}
+.result-kicker{font-size:.72rem;color:var(--vermillion);letter-spacing:.18em;margin-bottom:.45rem}
+.result-question{font-family:'Noto Serif SC',serif;font-size:1.12rem;line-height:1.75;color:var(--ink)}
+.result-category{display:inline-flex;margin:0 0 .45rem;padding:.14rem .55rem;border-radius:4px;background:var(--gold-bg);color:var(--gold);font-size:.72rem;letter-spacing:.06em}
+.result-disclaimer{margin:-.25rem 0 1rem;text-align:center;font-size:.78rem;color:var(--ink-faint);letter-spacing:.05em}
+
+.section{background:var(--paper);border:1px solid var(--border-light);border-radius:8px;padding:1.45rem;margin-bottom:1rem;animation:fadeInUp .5s ease both;box-shadow:0 10px 36px rgba(73,54,35,.05);scroll-margin-top:86px}
+.section:nth-child(2){animation-delay:.08s}
+.section:nth-child(3){animation-delay:.16s}
+.section:nth-child(4){animation-delay:.24s}
+.section:nth-child(5){animation-delay:.32s}
+.section:nth-child(6){animation-delay:.4s}
+
+.section-label{display:flex;align-items:center;gap:.6rem;font-family:'Noto Serif SC',serif;font-size:.84rem;color:var(--ink-light);letter-spacing:.12em;margin-bottom:1rem;padding-bottom:.55rem;border-bottom:1px solid var(--border-light)}
+.section-label::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--vermillion)}
+
+/* --- AI Result Section --- */
+.ai-result-section{border-color:var(--vermillion-light);background:linear-gradient(135deg,#fffdf8 58%,#fff5f2);position:relative;overflow:hidden}
+.ai-result-section::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--vermillion)}
+.ai-content{font-family:'Noto Serif SC',serif;font-size:1rem;line-height:2;color:var(--ink)}
+.ai-content h2,.ai-content h3{font-size:1.02rem;font-weight:600;color:var(--vermillion);line-height:1.6;margin:1.05rem 0 .4rem;padding-bottom:.3rem;border-bottom:1px solid var(--vermillion-light)}
+.ai-content h2:first-child,.ai-content h3:first-child{margin-top:0}
+.ai-content p{margin:.45rem 0}
+.ai-content strong{color:var(--ink);font-weight:600}
+.ai-content ul,.ai-content ol{margin:.45rem 0 .7rem 1.4rem;padding:0}
+.ai-content li{margin:.2rem 0;padding-left:.15rem}
+.ai-content br{line-height:1.4}
+.ai-summary-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.7rem;margin:.7rem 0 .8rem}
+.ai-summary-card{padding:.78rem .85rem;border:1px solid var(--border-light);border-radius:8px;background:rgba(255,253,248,.76);line-height:1.75}
+.ai-summary-card .summary-label{font-family:'Noto Sans SC',sans-serif;font-size:.72rem;color:var(--ink-faint);letter-spacing:.08em;margin-bottom:.18rem}
+.ai-summary-card .summary-text{font-size:.93rem;color:var(--ink)}
+.ai-callout{margin:.7rem 0;padding:.72rem .85rem;border:1px solid var(--gold-light);border-left:3px solid var(--gold);border-radius:8px;background:rgba(168,120,24,.07);font-size:.88rem;line-height:1.8;color:var(--ink-light)}
+.ai-callout .callout-label{display:block;font-family:'Noto Sans SC',sans-serif;font-size:.72rem;color:var(--gold);letter-spacing:.08em;margin-bottom:.15rem}
+
+.ai-loading{color:var(--ink-light);font-size:.88rem;text-align:center;padding:1.6rem 1rem;letter-spacing:.08em}
+.ai-error{color:var(--vermillion);font-size:.88rem;text-align:center;padding:1.4rem;line-height:1.8}
+.ai-configure-hint{text-align:center;padding:1.35rem;color:var(--ink-light);font-size:.88rem;line-height:1.9;border:1px dashed var(--border);border-radius:8px;background:rgba(255,253,248,.62)}
+.ai-configure-hint strong{color:var(--vermillion)}
+.btn-inline{display:inline-flex;align-items:center;justify-content:center;min-height:38px;padding:.42rem 1.25rem;background:var(--vermillion);color:#fff;border:none;border-radius:6px;font-size:.88rem;cursor:pointer;letter-spacing:.08em;transition:background .25s,transform .15s}
+.btn-inline:hover{background:var(--vermillion-dark)}
+.btn-inline:active{transform:scale(.98)}
+
+/* --- Hexagram Display --- */
+.hex-main{display:grid;grid-template-columns:minmax(0,1fr) 84px minmax(0,1fr);align-items:stretch;gap:.75rem;margin:1rem auto .75rem;max-width:780px}
+.hex-card{text-align:left;padding:.82rem .9rem;border:1px solid var(--border-light);border-radius:8px;background:var(--paper-soft);min-height:116px;display:grid;grid-template-columns:76px minmax(0,1fr);grid-template-areas:"svg name" "svg full" "svg badge";column-gap:.8rem;align-content:center;align-items:center}
+.hex-card .hex-svg{grid-area:svg;height:76px;margin:0;display:flex;align-items:center;justify-content:center}
+.hex-card .hex-svg svg{width:70px;height:auto;max-height:76px}
+.hex-card .hex-name{grid-area:name;font-family:'Noto Serif SC',serif;font-size:1.08rem;font-weight:500;line-height:1.35;min-width:0}
+.hex-card .hex-full{grid-area:full;font-size:.8rem;color:var(--ink-light);margin-top:.06rem;min-width:0}
+.hex-card .hex-jijing{grid-area:badge;justify-self:start;display:inline-block;margin-top:.38rem;padding:.1rem .48rem;border-radius:4px;font-size:.7rem;font-weight:500;background:var(--gold-bg);color:var(--gold)}
+.hex-card .hex-jijing.placeholder{visibility:hidden}
+.hex-change{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.32rem;color:var(--ink-faint);min-width:0}
+.hex-change::before{content:'';position:absolute;left:0;right:0;top:50%;height:1px;background:var(--border);z-index:0}
+.hex-change-arrow{position:relative;z-index:1;width:28px;height:28px;border-radius:50%;border:1px solid var(--border);background:var(--paper);display:flex;align-items:center;justify-content:center;font-size:.95rem;line-height:1;color:var(--ink-light)}
+.hex-change-label{position:relative;z-index:1;padding:.12rem .36rem;border-radius:4px;background:var(--paper);border:1px solid var(--border-light);font-size:.68rem;line-height:1.35;white-space:nowrap;color:var(--vermillion)}
+.hex-caption{text-align:center;font-size:.75rem;color:var(--ink-faint);margin-top:.4rem;letter-spacing:.05em}
+.reading-path{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:.55rem;margin:.2rem 0 1rem}
+.path-step{padding:.6rem .7rem;border:1px solid var(--border-light);border-radius:8px;background:rgba(251,247,238,.74);font-size:.78rem;line-height:1.55;color:var(--ink-light);text-align:left;cursor:pointer;transition:border-color .2s,background .2s,color .2s}
+.path-step strong{display:block;font-family:'Noto Serif SC',serif;font-size:.86rem;color:var(--ink);font-weight:500;margin-bottom:.08rem}
+.path-step:hover,.path-step.active{border-color:var(--vermillion-light);background:var(--vermillion-bg);color:var(--vermillion)}
+.result-nav{position:fixed;top:5.25rem;left:calc(50% + 470px);width:126px;padding:.72rem;border:1px solid var(--border-light);border-radius:8px;background:rgba(255,253,248,.86);box-shadow:0 12px 32px rgba(73,54,35,.08);backdrop-filter:blur(10px);z-index:80}
+.result-nav-title{font-family:'Noto Serif SC',serif;font-size:.78rem;color:var(--ink-faint);letter-spacing:.12em;margin:0 0 .45rem;padding-bottom:.45rem;border-bottom:1px solid var(--border-light)}
+.result-nav-list{display:grid;gap:.24rem}
+.result-nav-link{width:100%;border:none;border-radius:6px;background:transparent;color:var(--ink-light);font-size:.78rem;text-align:left;padding:.38rem .45rem;cursor:pointer;transition:background .2s,color .2s}
+.result-nav-link:hover,.result-nav-link.active{background:var(--vermillion-bg);color:var(--vermillion)}
+.guide-note{margin:.25rem 0 1rem;padding:.72rem .85rem;border-radius:8px;background:var(--paper-soft);border:1px solid var(--border-light);font-size:.84rem;line-height:1.85;color:var(--ink-light)}
+.guide-note strong{color:var(--vermillion);font-weight:500}
+
+/* --- Seal (Time Card) --- */
+.time-insight{display:grid;grid-template-columns:1fr;gap:1rem;min-width:0}
+.time-pillars{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:.75rem}
+.time-seal{background:var(--paper-soft);border:1px solid var(--border);border-radius:8px;padding:.78rem .7rem;min-width:0;text-align:center}
+.seal-label{font-size:.7rem;color:var(--ink-faint);margin-bottom:.4rem;letter-spacing:.1em}
+.seal-ganzhi{font-family:'Noto Serif SC',serif;font-size:1.02rem;font-weight:500;color:var(--ink);letter-spacing:.03em;line-height:1.55;overflow-wrap:anywhere}
+.time-group{display:grid;gap:.65rem;min-width:0}
+.time-group-title{font-family:'Noto Serif SC',serif;font-size:.86rem;color:var(--ink);font-weight:500;display:flex;align-items:center;gap:.45rem}
+.time-group-title::before{content:'';width:.34rem;height:.34rem;border-radius:50%;background:var(--vermillion)}
+.seal-detail{display:grid;grid-template-columns:minmax(0,1.08fr) minmax(0,.92fr);gap:.75rem;align-items:start}
+.seal-note{min-height:100%;padding:.75rem .85rem;background:var(--paper-soft);border:1px solid var(--border-light);border-radius:8px;min-width:0}
+.seal-note .il{color:var(--ink-faint);font-size:.72rem;margin-bottom:.2rem}
+.seal-note .iv{font-size:.8rem;font-weight:400;line-height:1.85;color:var(--ink-light);overflow-wrap:anywhere}
+.trigram-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.6rem;min-width:0}
+.trigram-card{padding:.7rem .75rem;background:var(--paper-soft);border:1px solid var(--border-light);border-radius:8px;min-width:0}
+.trigram-title{font-family:'Noto Serif SC',serif;font-size:.88rem;color:var(--ink);font-weight:500;margin-bottom:.45rem}
+.trigram-meta{display:grid;gap:.36rem;font-size:.8rem;color:var(--ink-light);line-height:1.65}
+.trigram-meta span{display:block;min-width:0;overflow-wrap:anywhere}
+.trigram-meta b{font-weight:500;color:var(--ink-faint);margin-right:.25rem}
+.seal-item{padding:.5rem .7rem;background:var(--paper-soft);border-radius:6px;font-size:.82rem}
+.seal-item .sl{color:var(--ink-faint);font-size:.72rem}
+.seal-item .sv{color:var(--ink);font-weight:500}
+
+/* --- Text blocks --- */
+.text-block{font-family:'Noto Serif SC',serif;font-size:.94rem;line-height:2;padding:.85rem 1rem;border-left:3px solid var(--vermillion-light);border-radius:0 8px 8px 0;margin:.45rem 0;background:rgba(251,247,238,.72)}
+.text-block.secondary{border-left-color:var(--gold-light);font-size:.85rem;color:var(--ink-light)}
+.text-block .original{color:var(--ink)}
+.text-block .translation{color:var(--ink-light);font-size:.85rem;display:block;margin-top:.45rem;border-left:2px solid var(--border-light);padding-left:.75em}
+.learn-details{margin:.8rem 0 0;border:1px solid var(--border-light);border-radius:8px;background:rgba(255,253,248,.58);overflow:hidden}
+.learn-details summary{list-style:none;cursor:pointer;padding:.72rem .9rem;font-size:.82rem;color:var(--ink-light);letter-spacing:.04em;display:flex;align-items:center;justify-content:space-between;gap:.8rem}
+.learn-details summary::-webkit-details-marker{display:none}
+.learn-details summary::after{content:'展开';font-size:.72rem;color:var(--ink-faint)}
+.learn-details[open] summary{border-bottom:1px solid var(--border-light)}
+.learn-details[open] summary::after{content:'收起'}
+.learn-details-body{padding:.85rem .95rem}
+
+.yao-list{margin-top:.3rem}
+.yao-item{display:grid;grid-template-columns:3.7rem minmax(0,1fr);gap:.75rem;padding:.65rem 0;font-size:.88rem;border-bottom:1px solid var(--border-light);align-items:flex-start}
+.yao-item:last-child{border-bottom:none}
+.yao-pos{font-family:'Noto Serif SC',serif;font-weight:600;color:var(--ink-light);font-size:.84rem}
+.yao-item.is-moving{background:var(--vermillion-bg);border-radius:8px;padding:.7rem .65rem;border-bottom-color:transparent}
+.yao-item.is-moving .yao-pos{color:var(--vermillion)}
+.yao-item:not(.is-moving){opacity:.68}
+.moving-yao-card{padding:1rem;border:1px solid var(--vermillion-light);border-radius:8px;background:var(--vermillion-bg);margin:.6rem 0 .85rem}
+.moving-yao-card .moving-label{font-size:.76rem;color:var(--vermillion);letter-spacing:.08em;margin-bottom:.25rem}
+.yao-text{font-family:'Noto Serif SC',serif;line-height:1.8}
+.yao-translation{font-size:.8rem;color:var(--ink-light);margin-top:.2rem;padding-left:.7em;border-left:2px solid var(--border-light)}
+
+/* --- Wuxing --- */
+.wuxing-panel{display:grid;grid-template-columns:minmax(180px,260px) minmax(0,1fr);gap:1rem;align-items:center;padding:1rem;border:1px solid var(--border-light);border-radius:8px;background:var(--paper-soft);overflow:hidden;min-width:0}
+.wuxing-result{font-size:.86rem;line-height:2;min-width:0;overflow-wrap:anywhere}
+.wuxing-tag{display:inline-block;padding:.1rem .45rem;border-radius:4px;font-size:.78rem;font-weight:500;margin:0 .1rem}
+.wx-wood{background:var(--green-light);color:var(--green-pine)}
+.wx-fire{background:#FCD4D4;color:#B33A3A}
+.wx-earth{background:#E8E0C8;color:#7A6B3C}
+.wx-metal{background:#E0E4EA;color:#4A5568}
+.wx-water{background:#D4E0F0;color:#3A5A8C}
+
+/* --- Wuxing Diagram --- */
+.wuxing-diagram{display:flex;justify-content:center;margin:0;min-width:0;overflow:hidden;padding:.55rem;border:1px solid var(--border-light);border-radius:8px;background:rgba(255,253,248,.58)}
+.wuxing-diagram svg{width:100%;max-width:260px;height:auto;display:block}
+
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:.6rem;margin-top:.5rem}
+.info-item{padding:.62rem .75rem;background:var(--paper-soft);border:1px solid var(--border-light);border-radius:6px;font-size:.82rem}
+.info-item .il{color:var(--ink-faint);font-size:.72rem;margin-bottom:.15rem}
+.info-item .iv{color:var(--ink);font-weight:500}
+
+/* --- Buttons --- */
+.btn-redo{display:block;margin:2rem auto 1rem;padding:.68rem 2.35rem;background:rgba(255,253,248,.72);color:var(--ink-light);border:1px solid var(--border);border-radius:6px;font-family:'Noto Serif SC',serif;font-size:.92rem;letter-spacing:.15em;cursor:pointer;transition:border-color .25s,color .25s,background .25s}
+.btn-redo:hover{border-color:var(--vermillion);color:var(--vermillion);background:var(--paper)}
+
+/* ===== AUTH OVERLAY ===== */
+.auth-overlay{display:none;position:fixed;inset:0;background:rgba(41,35,29,.35);z-index:200;justify-content:center;align-items:center;padding:1rem}
+.auth-overlay.open{display:flex}
+.auth-panel{background:var(--paper);border:1px solid var(--border-light);border-radius:8px;padding:1.6rem;width:100%;max-width:400px;max-height:85vh;overflow-y:auto;box-shadow:var(--shadow)}
+.auth-title{font-family:'Noto Serif SC',serif;font-size:1.05rem;font-weight:500;margin-bottom:1.2rem;display:flex;justify-content:space-between;align-items:center}
+.auth-close{width:28px;height:28px;border:1px solid var(--border);border-radius:50%;background:transparent;color:var(--ink-light);cursor:pointer;font-size:.85rem;display:flex;align-items:center;justify-content:center}
+.auth-close:hover{border-color:var(--vermillion);color:var(--vermillion)}
+.auth-tabs{display:flex;gap:0;margin-bottom:1.2rem;border-bottom:1px solid var(--border-light)}
+.auth-tab{flex:1;padding:.6rem 0;text-align:center;font-size:.88rem;color:var(--ink-light);cursor:pointer;border-bottom:2px solid transparent;transition:border-color .3s,color .3s}
+.auth-tab.active{color:var(--vermillion);border-bottom-color:var(--vermillion)}
+.auth-form{display:none}
+.auth-form.active{display:block}
+.auth-form .sg{margin-bottom:1rem}
+.auth-form .sg label{display:block;font-size:.82rem;color:var(--ink-light);margin-bottom:.4rem}
+.auth-form .sg input{width:100%;padding:.68rem .9rem;border:1px solid var(--border);border-radius:6px;background:var(--paper-soft);font-family:'Noto Sans SC',sans-serif;font-size:.88rem;color:var(--ink);outline:none;transition:border-color .3s}
+.auth-form .sg input:focus{border-color:var(--vermillion-light)}
+.btn-auth-submit{width:100%;padding:.68rem;background:var(--vermillion);color:#fff;border:none;border-radius:6px;font-family:'Noto Serif SC',serif;font-size:.92rem;letter-spacing:.1em;cursor:pointer;transition:background .3s}
+.btn-auth-submit:hover{background:var(--vermillion-dark)}
+.btn-auth-submit:disabled{opacity:.5;cursor:not-allowed}
+.auth-error{color:var(--vermillion);font-size:.82rem;text-align:center;margin-top:.6rem;min-height:1.2em}
+.auth-success{color:var(--green-pine);font-size:.82rem;text-align:center;margin-top:.6rem;min-height:1.2em}
+
+/* ===== USER BAR ===== */
+.user-bar{position:fixed;top:1rem;right:1rem;display:flex;align-items:center;gap:.55rem;z-index:100;font-size:.82rem;color:var(--ink-light)}
+.btn-login{padding:.38rem .85rem;border:1px solid var(--border);border-radius:6px;background:rgba(255,253,248,.78);color:var(--ink-light);cursor:pointer;font-family:'Noto Sans SC',sans-serif;font-size:.82rem;transition:border-color .25s,color .25s,background .25s;backdrop-filter:blur(8px)}
+.btn-login:hover{border-color:var(--vermillion);color:var(--vermillion);background:var(--paper)}
+.user-info{display:flex;align-items:center;gap:.5rem;padding:.34rem .7rem;border:1px solid var(--border-light);border-radius:6px;background:rgba(255,253,248,.8);backdrop-filter:blur(8px)}
+.user-info .uname{color:var(--ink);font-weight:500}
+.user-info .quota{color:var(--ink-faint);font-size:.75rem}
+.btn-logout{padding:.2rem .5rem;border:1px solid var(--border);border-radius:4px;background:transparent;color:var(--ink-faint);cursor:pointer;font-size:.78rem;transition:border-color .3s}
+.btn-logout:hover{border-color:var(--vermillion);color:var(--vermillion)}
+.btn-history{padding:.38rem .75rem;border:1px solid var(--border-light);border-radius:6px;background:rgba(255,253,248,.8);color:var(--ink-light);cursor:pointer;font-family:'Noto Sans SC',sans-serif;font-size:.82rem;transition:border-color .25s,color .25s,background .25s;backdrop-filter:blur(8px)}
+.btn-history:hover{border-color:var(--vermillion-light);color:var(--vermillion);background:var(--paper)}
+
+/* ===== HISTORY SIDEBAR ===== */
+.history-overlay{display:none;position:fixed;inset:0;background:rgba(41,35,29,.24);z-index:180}
+.history-overlay.open{display:block}
+.history-sidebar{position:fixed;top:0;right:-390px;width:370px;max-width:100vw;height:100vh;background:var(--paper);border-left:1px solid var(--border-light);z-index:190;transition:right .3s ease;padding:1.35rem;overflow-y:auto;box-shadow:-18px 0 45px rgba(73,54,35,.12)}
+.history-sidebar.open{right:0}
+.history-title{font-family:'Noto Serif SC',serif;font-size:1rem;font-weight:500;margin-bottom:1rem;display:flex;justify-content:space-between;align-items:center}
+.history-close{width:26px;height:26px;border:1px solid var(--border);border-radius:50%;background:transparent;color:var(--ink-light);cursor:pointer;font-size:.8rem;display:flex;align-items:center;justify-content:center}
+.history-close:hover{border-color:var(--vermillion);color:var(--vermillion)}
+.history-item{padding:.85rem;border:1px solid var(--border-light);border-radius:8px;margin-bottom:.75rem;cursor:pointer;background:var(--paper-soft);transition:border-color .25s,background .25s}
+.history-item:hover{border-color:var(--vermillion-light);background:#fffaf1}
+.history-item .hi-question{font-size:.88rem;color:var(--ink);font-weight:500;margin-bottom:.3rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.history-item .hi-meta{font-size:.75rem;color:var(--ink-faint)}
+.history-empty{text-align:center;padding:2rem;color:var(--ink-faint);font-size:.85rem}
+.history-detail{display:none}
+.history-detail.open{display:block}
+.history-back{display:inline-flex;align-items:center;gap:.25rem;margin-bottom:1rem;border:none;background:transparent;color:var(--ink-light);font-family:'Noto Sans SC',sans-serif;font-size:.82rem;cursor:pointer;padding:.2rem 0}
+.history-back:hover{color:var(--vermillion)}
+.history-detail-question{font-family:'Noto Serif SC',serif;font-size:1rem;line-height:1.7;color:var(--ink);margin-bottom:.35rem}
+.history-detail-time{font-size:.75rem;color:var(--ink-faint);margin-bottom:1rem}
+.history-detail-meta{display:grid;grid-template-columns:1fr;gap:.45rem;margin-bottom:1rem}
+.history-detail-meta .meta-item{padding:.5rem .65rem;border:1px solid var(--border-light);border-radius:6px;background:var(--bg);font-size:.78rem;color:var(--ink-light)}
+.history-detail-meta strong{font-weight:500;color:var(--ink)}
+.history-detail-section{border-top:1px solid var(--border-light);padding-top:.9rem}
+.history-detail-section .section-label{margin-bottom:.55rem}
+.history-detail-content.ai-content{font-size:.92rem;line-height:2}
+
+@media(max-width:820px){
+  #result-state{width:min(100%,720px)}
+  .ai-summary-grid{grid-template-columns:1fr}
+  .question-categories{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .reading-path{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .result-nav{position:sticky;top:.5rem;left:auto;width:auto;margin:0 0 .85rem;padding:.45rem;overflow-x:auto;white-space:nowrap}
+  .result-nav-title{display:none}
+  .result-nav-list{display:flex;gap:.25rem}
+  .result-nav-link{width:auto;flex:0 0 auto;padding:.42rem .62rem;text-align:center}
+  .time-pillars{grid-template-columns:repeat(5,1fr)}
+  .time-seal{padding:.65rem .55rem}
+  .seal-label{margin:0 0 .18rem}
+  .seal-ganzhi{font-size:.96rem;letter-spacing:0}
+  .seal-detail{grid-template-columns:1fr}
+  .trigram-grid{grid-template-columns:1fr 1fr}
+  .wuxing-panel{grid-template-columns:1fr}
+}
+
+@media(max-width:600px){
+  #input-state{justify-content:flex-start;padding:7rem 1rem 2.5rem}
+  .page-title{font-size:2rem;letter-spacing:.15em}
+  .page-subtitle{font-size:.84rem;margin-bottom:1.65rem}
+  .input-box{padding:.45rem}
+  .question-categories{grid-template-columns:repeat(2,minmax(0,1fr));gap:.32rem}
+  .category-chip{min-height:32px;font-size:.76rem}
+  .input-box textarea{min-height:156px;padding:1.05rem;font-size:.96rem}
+  .btn-divine{width:100%;max-width:210px;padding:.72rem 1rem}
+  .input-hint{font-size:.76rem;line-height:1.7}
+  .user-bar{top:.75rem;right:.75rem;gap:.4rem}
+  #result-state{padding:1rem .75rem 3rem}
+  .result-intro,.section{padding:1rem}
+  .section{margin-bottom:.85rem}
+  .section-label{font-size:.8rem;margin-bottom:.8rem}
+  .section{scroll-margin-top:70px}
+  .reading-path{grid-template-columns:1fr;gap:.45rem}
+  .path-step{padding:.55rem .65rem}
+  .guide-note{font-size:.8rem;padding:.65rem .75rem}
+  .learn-details summary{padding:.65rem .75rem}
+  .learn-details-body{padding:.75rem}
+  .hex-main{grid-template-columns:1fr;gap:.75rem;margin:.85rem 0}
+  .hex-change{min-height:44px;gap:.2rem}
+  .hex-change::before{left:50%;right:auto;top:0;bottom:0;width:1px;height:auto}
+  .hex-change-arrow{transform:rotate(90deg)}
+  .hex-change-label{font-size:.66rem}
+  .hex-card{grid-template-columns:68px minmax(0,1fr);min-height:104px;padding:.72rem .7rem;column-gap:.65rem}
+  .hex-card .hex-svg{height:68px}
+  .hex-card .hex-svg svg{width:64px;max-height:68px}
+  .hex-card .hex-name{font-size:1rem}
+  .yao-item{grid-template-columns:3.3rem minmax(0,1fr);gap:.6rem;font-size:.84rem}
+  .time-pillars{grid-template-columns:repeat(2,minmax(0,1fr));gap:.55rem}
+  .trigram-grid{grid-template-columns:1fr}
+  .wuxing-panel{padding:.75rem}
+  .wuxing-diagram svg{width:230px;height:auto}
+  .history-sidebar{width:100vw;right:-100vw;padding:1rem}
+  .auth-panel{padding:1.25rem}
+}
+</style>
+</head>
+<body>
+
+<div class="user-bar" id="user-bar">
+  <button class="btn-history" id="btn-history" onclick="toggleHistory()" style="display:none" title="历史记录">记录</button>
+  <button class="btn-login" id="btn-login" onclick="showAuth('login')">登录</button>
+  <div class="user-info" id="user-info" style="display:none">
+    <span class="uname" id="uname"></span>
+    <span class="quota" id="quota"></span>
+    <button class="btn-logout" onclick="doLogout()">退出</button>
+  </div>
+</div>
+
+<!-- ===== INPUT ===== -->
+<div id="input-state">
+  <div class="page-title">梅花易数</div>
+  <div class="page-subtitle">以时起卦，以象观心</div>
+  <div class="input-box">
+    <div class="question-categories" role="radiogroup" aria-label="问题分类">
+      <button type="button" class="category-chip" data-category="事业" role="radio" aria-checked="false">事业</button>
+      <button type="button" class="category-chip" data-category="感情" role="radio" aria-checked="false">感情</button>
+      <button type="button" class="category-chip" data-category="财运" role="radio" aria-checked="false">财运</button>
+      <button type="button" class="category-chip" data-category="学业" role="radio" aria-checked="false">学业</button>
+      <button type="button" class="category-chip" data-category="健康" role="radio" aria-checked="false">健康</button>
+      <button type="button" class="category-chip active" data-category="其他" role="radio" aria-checked="true">其他</button>
+    </div>
+    <textarea id="question-input" placeholder="心中所想，落笔成卦……&#10;&#10;可以是任何问题：事业、感情、抉择、困惑……" rows="4"></textarea>
+    <button class="btn-divine" id="btn-divine" onclick="startDivine()">起 卦</button>
+  </div>
+  <div class="input-hint">卦象解读仅供娱乐参考，请勿作为现实决策依据。</div>
+</div>
+
+<!-- ===== LOADING ===== -->
+<div id="loading-state">
+  <div class="loading-hexagram" id="loading-hex"></div>
+  <div class="loading-text" id="loading-text">卦象推演中……</div>
+</div>
+
+<!-- ===== RESULT ===== -->
+<div id="result-state"></div>
+
+<!-- ===== AUTH MODAL ===== -->
+<div class="auth-overlay" id="auth-overlay">
+  <div class="auth-panel">
+    <div class="auth-title"><span>账户</span><button class="auth-close" onclick="closeAuth()">✕</button></div>
+    <div class="auth-tabs">
+      <div class="auth-tab active" data-tab="login" onclick="switchAuthTab('login')">登录</div>
+      <div class="auth-tab" data-tab="register" onclick="switchAuthTab('register')">注册</div>
+    </div>
+    <div id="auth-error" class="auth-error"></div>
+    <div id="auth-success" class="auth-success"></div>
+    <form class="auth-form active" id="form-login" onsubmit="doLogin(event)">
+      <div class="sg"><label>用户名</label><input type="text" id="login-user" autocomplete="username" required></div>
+      <div class="sg"><label>密码</label><input type="password" id="login-pass" autocomplete="current-password" required></div>
+      <button type="submit" class="btn-auth-submit">登 录</button>
+    </form>
+    <form class="auth-form" id="form-register" onsubmit="doRegister(event)">
+      <div class="sg"><label>用户名</label><input type="text" id="reg-user" autocomplete="username" minlength="2" maxlength="50" required></div>
+      <div class="sg"><label>密码（至少6位）</label><input type="password" id="reg-pass" autocomplete="new-password" minlength="6" required></div>
+      <button type="submit" class="btn-auth-submit">注 册</button>
+    </form>
+  </div>
+</div>
+
+<!-- ===== HISTORY SIDEBAR ===== -->
+<div class="history-overlay" id="history-overlay" onclick="toggleHistory()"></div>
+<div class="history-sidebar" id="history-sidebar">
+  <div class="history-title"><span>起卦记录</span><button class="history-close" onclick="toggleHistory()">✕</button></div>
+  <div id="history-list"><div class="history-empty">暂无记录</div></div>
+  <div class="history-detail" id="history-detail"></div>
+</div>
+
+<script>
+const YJ={"_meta":{"source":"周易通行本（经文+十翼大象传），五行方位依据梅花易数体系","note":"卦辞、爻辞原文来自《周易》经文，象辞来自《易传·大象传》。吉凶级别为传统综合评定，仅供参考。"},"bagua":{"1":{"name":"乾","symbol":"☰","nature":"天","wuxing":"金","direction":"西北","color":["白","银"],"season":"秋·冬初","objects":["天体","君王","父亲","玉","金","圆物","马","寒冰"],"family":"父","digit":1},"2":{"name":"兑","symbol":"☱","nature":"泽","wuxing":"金","direction":"西","color":["白","银"],"season":"秋","objects":["少女","巫","口舌","毁折","羊","泽","雨","言说"],"family":"少女","digit":2},"3":{"name":"离","symbol":"☲","nature":"火","wuxing":"火","direction":"南","color":["红","紫"],"season":"夏","objects":["火","日","电","目","文明","甲胄","戈兵","雉"],"family":"中女","digit":3},"4":{"name":"震","symbol":"☳","nature":"雷","wuxing":"木","direction":"东","color":["碧","青"],"season":"春","objects":["雷","龙","长男","足","竹","萑苇","马","躁动"],"family":"长男","digit":4},"5":{"name":"巽","symbol":"☴","nature":"风","wuxing":"木","direction":"东南","color":["碧","青"],"season":"春末·夏初","objects":["风","木","长女","股","鸡","绳直","工巧","进退"],"family":"长女","digit":5},"6":{"name":"坎","symbol":"☵","nature":"水","wuxing":"水","direction":"北","color":["黑","蓝"],"season":"冬","objects":["水","月","中男","耳","沟渎","隐伏","弓轮","盗寇"],"family":"中男","digit":6},"7":{"name":"艮","symbol":"☶","nature":"山","wuxing":"土","direction":"东北","color":["黄","棕"],"season":"冬末·春初","objects":["山","少男","手","狗","门阙","径路","小石","阁寺"],"family":"少男","digit":7},"8":{"name":"坤","symbol":"☷","nature":"地","wuxing":"土","direction":"西南","color":["黄","黑"],"season":"夏末·秋初","objects":["地","母亲","布","釜","吝啬","均","子母牛","大舆"],"family":"母","digit":8}},"tiangan":[{"name":"甲","wuxing":"木","direction":"东"},{"name":"乙","wuxing":"木","direction":"东"},{"name":"丙","wuxing":"火","direction":"南"},{"name":"丁","wuxing":"火","direction":"南"},{"name":"戊","wuxing":"土","direction":"中"},{"name":"己","wuxing":"土","direction":"中"},{"name":"庚","wuxing":"金","direction":"西"},{"name":"辛","wuxing":"金","direction":"西"},{"name":"壬","wuxing":"水","direction":"北"},{"name":"癸","wuxing":"水","direction":"北"}],"dizhi":[{"name":"子","animal":"鼠","wuxing":"水","direction":"北","hour":"23:00-01:00"},{"name":"丑","animal":"牛","wuxing":"土","direction":"北偏东","hour":"01:00-03:00"},{"name":"寅","animal":"虎","wuxing":"木","direction":"东北","hour":"03:00-05:00"},{"name":"卯","animal":"兔","wuxing":"木","direction":"东","hour":"05:00-07:00"},{"name":"辰","animal":"龙","wuxing":"土","direction":"东南","hour":"07:00-09:00"},{"name":"巳","animal":"蛇","wuxing":"火","direction":"东南","hour":"09:00-11:00"},{"name":"午","animal":"马","wuxing":"火","direction":"南","hour":"11:00-13:00"},{"name":"未","animal":"羊","wuxing":"土","direction":"南","hour":"13:00-15:00"},{"name":"申","animal":"猴","wuxing":"金","direction":"西南","hour":"15:00-17:00"},{"name":"酉","animal":"鸡","wuxing":"金","direction":"西","hour":"17:00-19:00"},{"name":"戌","animal":"狗","wuxing":"土","direction":"西北","hour":"19:00-21:00"},{"name":"亥","animal":"猪","wuxing":"水","direction":"西北","hour":"21:00-23:00"}],"wuxing_sheng":{"木":"火","火":"土","土":"金","金":"水","水":"木"},"wuxing_ke":{"木":"土","火":"金","土":"水","金":"木","水":"火"},"hexagrams":[{"id":1,"name":"乾","full_name":"乾为天","symbol":"䷀","upper":1,"lower":1,"gua_ci":"元，亨，利，贞。","xiang_ci":"天行健，君子以自强不息。","yaoci":[{"pos":1,"type":"九","text":"潜龙，勿用。","translation":"龙尚潜伏于深渊之中，时机未到，暂且隐忍待时，不可贸然行动。"},{"pos":2,"type":"九","text":"见龙在田，利见大人。","translation":"龙已现身于田野之上，才华初显，此时宜于拜访贤德之人以寻求指引。"},{"pos":3,"type":"九","text":"君子终日乾乾，夕惕若，厉，无咎。","translation":"君子整天勤勉进取，到夜晚仍保持警惕。虽处境艰险，却不会有灾祸。"},{"pos":4,"type":"九","text":"或跃在渊，无咎。","translation":"龙或腾跃于深渊，或在渊中蛰伏，审时度势而行，不会有过失。"},{"pos":5,"type":"九","text":"飞龙在天，利见大人。","translation":"龙腾飞于天际，如日中天，利见大德之人，事业正当鼎盛之时。"},{"pos":6,"type":"九","text":"亢龙，有悔。","translation":"龙飞到了极限，盛极而衰，过于刚强亢进必有悔恨。"}],"jijing":"上吉","gua_ci_translation":"初始即大为亨通，利于坚守正道。乾卦象征天，寓意刚健有为、自强不息，是一切事业的开端。","xiang_ci_translation":"天道的运行刚健不息，君子当效法天道，时刻自强、永不懈怠。"},{"id":2,"name":"坤","full_name":"坤为地","symbol":"䷁","upper":8,"lower":8,"gua_ci":"元，亨，利牝马之贞。君子有攸往，先迷后得主。利西南得朋，东北丧朋。安贞，吉。","xiang_ci":"地势坤，君子以厚德载物。","yaoci":[{"pos":1,"type":"六","text":"履霜，坚冰至。","translation":"脚下踩到薄霜，便知坚冰将至。事物的衰败总有征兆，见微知著，须早做防备。"},{"pos":2,"type":"六","text":"直、方、大，不习，无不利。","translation":"为人正直、方正、宽大，纵然不刻意修习，也能无处不利。这是坤德的自然流露。"},{"pos":3,"type":"六","text":"含章可贞。或从王事，无成有终。","translation":"内含美好品德而不外露，安守正道。若辅佐君王做事，功成而不居功自傲。"},{"pos":4,"type":"六","text":"括囊，无咎无誉。","translation":"扎紧口袋，不言不语，不求赞美也不招批评，谨言慎行以自处。"},{"pos":5,"type":"六","text":"黄裳，元吉。","translation":"身着黄色下裳（黄色象征中道），大吉。居中守正，谦逊而不张扬，最为吉利。"},{"pos":6,"type":"六","text":"龙战于野，其血玄黄。","translation":"龙在原野上搏斗，血流玄黄。阴气盛极与阳气相争，两败俱伤，极为凶险。"}],"jijing":"中吉","gua_ci_translation":"初始即亨通，利于像母马一样柔顺而坚守正道。君子有所前往，起初虽迷惘，但终能找到依归。往西南方可得同伴，往东北方则失去同伴，安于正道则吉祥。","xiang_ci_translation":"大地的气势柔顺宽厚，君子当效法大地，以深厚的品德承载万物、养育苍生。"},{"id":3,"name":"屯","full_name":"水雷屯","symbol":"䷂","upper":6,"lower":4,"gua_ci":"元亨利贞。勿用有攸往，利建侯。","xiang_ci":"云雷，屯。君子以经纶。","yaoci":[{"pos":1,"type":"九","text":"磐桓，利居贞，利建侯。","translation":"徘徊难进之际，宜于坚守正道，不宜轻举妄动，适合从基层开始建立根基。"},{"pos":2,"type":"六","text":"屯如邅如，乘马班如。匪寇婚媾，女子贞不字，十年乃字。","translation":"踌躇前行，骑马徘徊不前。来者并非强盗，而是求婚者，女子坚守贞洁不愿出嫁，十年后才允婚。事有迟滞，须耐心等待。"},{"pos":3,"type":"六","text":"即鹿无虞，惟入于林中。君子几，不如舍，往吝。","translation":"追逐鹿群进入山林，没有向导引路。君子见机而止，与其冒险深入不如及时放弃。"},{"pos":4,"type":"六","text":"乘马班如，求婚媾，往吉，无不利。","translation":"骑马前行去求婚，前往必获吉祥，无处不利。经过犹豫之后果断行动，反而顺利。"},{"pos":5,"type":"九","text":"屯其膏，小贞吉，大贞凶。","translation":"积蓄恩泽但施予有限。小事守正则吉，大事则凶。力所不及之时，宜从小处着手。"},{"pos":6,"type":"六","text":"乘马班如，泣血涟如。","translation":"骑马徘徊，泪水涟涟。困顿至极，悲伤无以复加。"}],"jijing":"中","gua_ci_translation":"初始即亨通，利于坚守正道。不宜贸然前往，宜于建立诸侯、奠定基业。万事开头难，屯卦象征事物初生时的艰难。","xiang_ci_translation":"云与雷交相呼应而雨尚未降，象征创业之初的艰难。君子当在此艰难之时筹划经营，建立秩序。"},{"id":4,"name":"蒙","full_name":"山水蒙","symbol":"䷃","upper":7,"lower":6,"gua_ci":"亨。匪我求童蒙，童蒙求我。初筮告，再三渎，渎则不告。利贞。","xiang_ci":"山下出泉，蒙。君子以果行育德。","yaoci":[{"pos":1,"type":"六","text":"发蒙，利用刑人，用说桎梏，以往吝。","translation":"启发蒙昧，宜用惩戒树立规范，脱去其桎梏（旧习）。但过于严厉地驱使，日后恐生遗憾。"},{"pos":2,"type":"九","text":"包蒙，吉。纳妇，吉。子克家。","translation":"包容蒙昧之人，以宽容态度施教，吉祥。若纳其为妇，也吉祥。儿子能撑持家业。"},{"pos":3,"type":"六","text":"勿用取女，见金夫，不有躬，无攸利。","translation":"不宜娶这样的女子——她只见金玉其外，不守妇道，贸然娶之毫无益处。"},{"pos":4,"type":"六","text":"困蒙，吝。","translation":"困于蒙昧而无人教导，处境艰难，前途堪忧。"},{"pos":5,"type":"六","text":"童蒙，吉。","translation":"以童蒙之心虚心求教，吉祥。不自以为是，才能接受正确的引导。"},{"pos":6,"type":"九","text":"击蒙，不利为寇，利御寇。","translation":"击破蒙昧，不利于做强盗之行，而利于抵御强盗。教化须以正道，不可滥用严惩。"}],"jijing":"中","gua_ci_translation":"亨通。并非我去求蒙昧之人，而是蒙昧之人来求我。初次占筮则告知，再三亵渎则不告知，利于坚守正道。蒙卦象征启蒙与教育。","xiang_ci_translation":"山下有泉水涌出，象征启蒙。君子当以果断的行动来培育品德，以教化开启民智。"},{"id":5,"name":"需","full_name":"水天需","symbol":"䷄","upper":6,"lower":1,"gua_ci":"有孚，光亨，贞吉，利涉大川。","xiang_ci":"云上于天，需。君子以饮食宴乐。","yaoci":[{"pos":1,"type":"九","text":"需于郊，利用恒，无咎。","translation":"在郊外等待，保持恒心与耐心，不会有灾咎。远离纷争之地最为稳妥。"},{"pos":2,"type":"九","text":"需于沙，小有言，终吉。","translation":"在沙滩上等待，虽有小波折和口舌是非，但最终吉祥。耐心终有回报。"},{"pos":3,"type":"九","text":"需于泥，致寇至。","translation":"在泥泞中等待，招致强盗逼近。离危险太近，灾祸将至。"},{"pos":4,"type":"六","text":"需于血，出自穴。","translation":"在血光之地等待，却能从险境中脱身而出。虽陷困境，终能化险为夷。"},{"pos":5,"type":"九","text":"需于酒食，贞吉。","translation":"在酒食宴席中等待，安享其成，坚守正道则吉。时运已至，从容应对。"},{"pos":6,"type":"六","text":"入于穴，有不速之客三人来，敬之，终吉。","translation":"进入洞穴之中，忽然有三位不速之客到来，以敬意待之，最终吉祥。意外之中藏有转机。"}],"jijing":"吉","gua_ci_translation":"心怀诚信，光明亨通，坚守正道则吉，利于渡越大河。需卦象征等待时机，耐心则成事。","xiang_ci_translation":"云气聚集于天而尚未降雨，象征等待。君子在此期间应饮食宴乐、养精蓄锐，以待时机成熟。"},{"id":6,"name":"讼","full_name":"天水讼","symbol":"䷅","upper":1,"lower":6,"gua_ci":"有孚，窒惕，中吉，终凶。利见大人，不利涉大川。","xiang_ci":"天与水违行，讼。君子以作事谋始。","yaoci":[{"pos":1,"type":"六","text":"不永所事，小有言，终吉。","translation":"不把争讼之事拖延太久，虽有些口舌之争，但最终和解则吉。见好就收，不纠缠到底。"},{"pos":2,"type":"九","text":"不克讼，归而逋，其邑人三百户，无眚。","translation":"争讼未能胜诉，速速退让而逃归。其封邑三百户人家不受牵连，灾祸得以避免。"},{"pos":3,"type":"六","text":"食旧德，贞厉，终吉。或从王事，无成。","translation":"依靠旧有的恩德维生，处境艰难但最终吉祥。若从王事，不可贪图功成（安守本分）。"},{"pos":4,"type":"九","text":"不克讼，复即命，渝，安贞，吉。","translation":"争讼未胜，回归本分接受天命，改变争斗之心，安守正道则吉。知止而退，最为明智。"},{"pos":5,"type":"九","text":"讼，元吉。","translation":"以公正之心断决讼事，大吉。居中守正、秉公裁断，必得人心。"},{"pos":6,"type":"九","text":"或锡之鞶带，终朝三褫之。","translation":"或被赏赐华丽的腰带，但一个早晨之间就被剥夺三次。因讼所得之赏，终不可恃。"}],"jijing":"凶","gua_ci_translation":"心怀诚信，但被阻塞而需保持警惕，中间阶段吉祥，最终却凶险。利于面见大德之人，不利于涉越大河。讼卦象征争端与诉讼。","xiang_ci_translation":"天与水背道而驰，象征争讼。君子做事应从一开始就做好谋划，防患于未然，避免争端。"},{"id":7,"name":"师","full_name":"地水师","symbol":"䷆","upper":8,"lower":6,"gua_ci":"贞，丈人吉，无咎。","xiang_ci":"地中有水，师。君子以容民畜众。","yaoci":[{"pos":1,"type":"六","text":"师出以律，否臧凶。","translation":"出兵须严明军纪，军纪不良则凶。一切行动以纪律为先。"},{"pos":2,"type":"九","text":"在师中，吉，无咎，王三锡命。","translation":"身在军中担任统帅，吉祥，没有灾咎，君王多次赐命嘉奖。将帅得君信任。"},{"pos":3,"type":"六","text":"师或舆尸，凶。","translation":"军队中或有人载尸而归，大凶。出兵失利，伤亡惨重，是任人不当的恶果。"},{"pos":4,"type":"六","text":"师左次，无咎。","translation":"军队向左撤退驻扎，虽未取胜但避免了更大的损失，没有灾咎。审时度势退而不乱。"},{"pos":5,"type":"六","text":"田有禽，利执言，无咎。长子帅师，弟子舆尸，贞凶。","translation":"田地里有禽兽出没，宜于果断捕获，没有灾咎。但若任命不当，长子统帅反而让弟子载尸而归，凶险。"},{"pos":6,"type":"六","text":"大君有命，开国承家，小人勿用。","translation":"天子论功行赏，开国承家。但不可重用小人，小人一旦得势则祸乱必生。"}],"jijing":"凶中带吉","gua_ci_translation":"利于坚守正道，以老成持重的统帅领兵则吉，不会有灾咎。师卦象征军队与统率之道。","xiang_ci_translation":"地中有水，水聚于地中。象征兵众藏于民众之中。君子当以宽容之心容纳百姓、统领众人。"},{"id":8,"name":"比","full_name":"水地比","symbol":"䷇","upper":6,"lower":8,"gua_ci":"吉。原筮，元永贞，无咎。不宁方来，后夫凶。","xiang_ci":"地上有水，比。先王以建万国，亲诸侯。","yaoci":[{"pos":1,"type":"六","text":"有孚，比之无咎。有孚盈缶，终来有它，吉。","translation":"心怀诚信去亲附他人，没有灾咎。诚信如同装满瓦罐的水充盈溢出，最终会有意外的吉祥。"},{"pos":2,"type":"六","text":"比之自内，贞吉。","translation":"从内部亲附，坚守正道则吉。亲近身边的人，由内而外的真诚最为可贵。"},{"pos":3,"type":"六","text":"比之匪人。","translation":"所亲附的不是正人君子，结交不当则前途堪忧。择友须慎。"},{"pos":4,"type":"六","text":"外比之，贞吉。","translation":"向外亲附贤明之人，坚守正道则吉。应攀附高明，而非屈就于庸人。"},{"pos":5,"type":"九","text":"显比，王用三驱，失前禽，邑人不诫，吉。","translation":"光明正大地亲近辅佐君王。君王狩猎只从三面驱赶，放走前方逃跑的猎物。邑中百姓毫不惊惧，吉祥。以仁德感化，不强行追逼。"},{"pos":6,"type":"六","text":"比之无首，凶。","translation":"亲附却无首领引领，各自为政，凶险。群龙无首则不成事。"}],"jijing":"吉","gua_ci_translation":"吉祥。经过慎重考虑后的结交，长久守正则无灾咎。不安定者纷纷来归附，后来者反而凶险。比卦象征亲附与合作。","xiang_ci_translation":"地上有水，水与地亲密相合。先王据此建立万国、亲近诸侯，使天下归心。"},{"id":9,"name":"小畜","full_name":"风天小畜","symbol":"䷈","upper":5,"lower":1,"gua_ci":"亨。密云不雨，自我西郊。","xiang_ci":"风行天上，小畜。君子以懿文德。","yaoci":[{"pos":1,"type":"九","text":"复自道，何其咎，吉。","translation":"从原路返回，循正道而行，哪里会有灾咎？吉祥。知错能改，回归正道。"},{"pos":2,"type":"九","text":"牵复，吉。","translation":"被人牵引着回归正道，吉祥。接受善意的引导，一同返回正确方向。"},{"pos":3,"type":"九","text":"舆说辐，夫妻反目。","translation":"车轮辐条脱落，夫妻反目不和。前进受阻，内部矛盾显现。以柔克刚，若强硬则生隙。"},{"pos":4,"type":"六","text":"有孚，血去惕出，无咎。","translation":"心怀诚信，流血的灾祸远离，恐惧消除，没有灾咎。以诚信化解冲突与危机。"},{"pos":5,"type":"九","text":"有孚挛如，富以其邻。","translation":"诚信感召他人，紧密相连。以自身的富裕帮助邻居，德不孤必有邻。"},{"pos":6,"type":"九","text":"既雨既处，尚德载。妇贞厉。月几望，君子征凶。","translation":"雨终于降下，安于现状。但若不知进退，妇人固守则危险。月亮将近圆满之时，君子再进取则凶。当知盛极则衰之理。"}],"jijing":"中吉","gua_ci_translation":"亨通。浓云密布却尚未降雨，从西郊飘来。小畜卦象征力量尚弱时的蓄养与积累。","xiang_ci_translation":"风行于天上，尚未化雨。君子当在此蓄养阶段修养文辞与德行，以待厚积薄发。"},{"id":10,"name":"履","full_name":"天泽履","symbol":"䷉","upper":1,"lower":2,"gua_ci":"履虎尾，不咥人，亨。","xiang_ci":"上天下泽，履。君子以辩上下，定民志。","yaoci":[{"pos":1,"type":"九","text":"素履，往无咎。","translation":"以朴实无华的态度行事，前往不会有灾咎。保持本色，不加修饰反而安全。"},{"pos":2,"type":"九","text":"履道坦坦，幽人贞吉。","translation":"所走的道路平坦宽广，幽居之人坚守正道则吉。内心坦荡，不慕虚荣。"},{"pos":3,"type":"六","text":"眇能视，跛能履，履虎尾，咥人，凶。武人为于大君。","translation":"眼睛虽眇却能看，脚虽跛却能走——勉强行事如同踩虎尾，必被咬伤。一介武夫妄图充当大君，凶险。力不胜任却逞强，必招祸。"},{"pos":4,"type":"九","text":"履虎尾，愬愬，终吉。","translation":"小心翼翼地踩到老虎尾巴，保持警惕与恭敬，最终吉祥。谨慎者终获善报。"},{"pos":5,"type":"九","text":"夬履，贞厉。","translation":"果决前行，如同刚猛地踏虎尾。坚守正道但处境危险，须极度谨慎。"},{"pos":6,"type":"九","text":"视履考祥，其旋元吉。","translation":"回顾所走过的道路，审视吉凶征兆，善始善终，大吉。全程审慎反思者必有好结果。"}],"jijing":"吉","gua_ci_translation":"踩到老虎尾巴，老虎却没有咬人，亨通。履卦象征谨慎行事、如履薄冰。","xiang_ci_translation":"上为天，下为泽，天尊地卑之象分明。君子据此分辨上下之分，安定民众的志向。"},{"id":11,"name":"泰","full_name":"地天泰","symbol":"䷊","upper":8,"lower":1,"gua_ci":"小往大来，吉亨。","xiang_ci":"天地交，泰。后以财成天地之道，辅相天地之宜，以左右民。","yaoci":[{"pos":1,"type":"九","text":"拔茅茹以其汇，征吉。","translation":"拔起茅草，其根系相连，一同拔起。志同道合者携手并进，征伐则吉。以类相从，同道同行。"},{"pos":2,"type":"九","text":"包荒，用冯河，不遐遗，朋亡，得尚于中行。","translation":"胸怀宽广，能包容荒秽。有徒步涉河的勇气，不遗弃偏远之人，不结党营私，以中庸之道行事。"},{"pos":3,"type":"九","text":"无平不陂，无往不复，艰贞无咎。勿恤其孚，于食有福。","translation":"没有平坦而不变为陡坡的，没有去而不返的。在艰难中坚守正道则无灾咎。不必忧虑诚信问题，安享福禄。物极必反是天地常理。"},{"pos":4,"type":"六","text":"翩翩，不富以其邻，不戒以孚。","translation":"轻飘飘地翩然而至，不以财富夸耀于邻人，不以戒备对待来者，以诚相感。"},{"pos":5,"type":"六","text":"帝乙归妹，以祉元吉。","translation":"帝乙嫁妹，以此获福，大吉。居高者屈尊就下，上下交心，天下太平。"},{"pos":6,"type":"六","text":"城复于隍，勿用师，自邑告命，贞吝。","translation":"城墙倒塌回护城河中，不可再用兵。从城邑中传来命令，虽守正道也有遗憾。泰极否来，盛极而衰之兆。"}],"jijing":"上吉","gua_ci_translation":"小者往、大者来，天地交合而万物通泰，吉祥亨通。泰卦象征通达、太平盛世。","xiang_ci_translation":"天地之气交相融合，万物生长畅达。君主据此裁成天地之道，辅佐天地之宜，左右辅助万民。"},{"id":12,"name":"否","full_name":"天地否","symbol":"䷋","upper":1,"lower":8,"gua_ci":"否之匪人，不利君子贞。大往小来。","xiang_ci":"天地不交，否。君子以俭德辟难，不可荣以禄。","yaoci":[{"pos":1,"type":"六","text":"拔茅茹以其汇，贞吉，亨。","translation":"拔起茅草其根相连，坚守正道则吉祥亨通。在否闭之世，宜洁身自好，与志同道合者一同退隐。"},{"pos":2,"type":"六","text":"包承，小人吉，大人否，亨。","translation":"包容顺承，小人得势而吉，大人则应退守不争，如此反而亨通。环境不利时，保全自身为上策。"},{"pos":3,"type":"六","text":"包羞。","translation":"被委以羞耻之事。承受屈辱而不自知，处境堪忧。"},{"pos":4,"type":"九","text":"有命，无咎，畴离祉。","translation":"天命所归，没有灾咎。同类之人一同分享福祉。否极泰来之时，接受天命安排。"},{"pos":5,"type":"九","text":"休否，大人吉。其亡其亡，系于苞桑。","translation":"闭塞之局开始消解，大人吉祥。心中常念'亡乎亡乎'，如同把命运系在脆弱的桑树上——居安思危，方可安然度过。"},{"pos":6,"type":"九","text":"倾否，先否后喜。","translation":"闭塞之局彻底倾覆，先历艰辛而后得喜悦。否极泰来，拨云见日。"}],"jijing":"凶","gua_ci_translation":"闭塞不通，并非人道所应有的状态。不利于君子坚守正道。大者去、小者来，天地不交。否卦象征闭塞与困顿。","xiang_ci_translation":"天地之气互不交合，万物凋零闭塞。君子当以节俭之德躲避灾祸，不可贪图荣华俸禄。"},{"id":13,"name":"同人","full_name":"天火同人","symbol":"䷌","upper":1,"lower":3,"gua_ci":"同人于野，亨。利涉大川，利君子贞。","xiang_ci":"天与火，同人。君子以类族辨物。","yaoci":[{"pos":1,"type":"九","text":"同人于门，无咎。","translation":"出门便能与同志之人交往，没有灾咎。广泛结交而不局限于私党。"},{"pos":2,"type":"六","text":"同人于宗，吝。","translation":"只与宗族内部的人结交，格局狭隘，前途受困。偏于私亲则难以成大事。"},{"pos":3,"type":"九","text":"伏戎于莽，升其高陵，三岁不兴。","translation":"将兵力隐藏在草莽之中，登上高陵观察，三年都不敢发兵。过于冒进而又犹豫不决，错失良机。"},{"pos":4,"type":"九","text":"乘其墉，弗克攻，吉。","translation":"登上城墙准备进攻，却又放弃攻击，吉祥。能克制自己不轻举妄动，是明智之举。"},{"pos":5,"type":"九","text":"同人，先号咷而后笑，大师克相遇。","translation":"与同志相聚，先号哭后欢笑。经历了一番激烈的战斗后才得以会合。好事多磨。"},{"pos":6,"type":"九","text":"同人于郊，无悔。","translation":"在郊野与志同道合之人相处，没有悔恨。远离纷争，虽未居中心却保持了气节。"}],"jijing":"吉","gua_ci_translation":"与志同道合者在旷野上聚会，亨通。利于涉越大河，利于君子坚守正道。同人卦象征团结与和谐。","xiang_ci_translation":"天与火性质相近，象征同志之人的聚集。君子当据此辨别事物的类别，审慎地分辨人群中的善与恶。"},{"id":14,"name":"大有","full_name":"火天大有","symbol":"䷍","upper":3,"lower":1,"gua_ci":"元亨。","xiang_ci":"火在天上，大有。君子以遏恶扬善，顺天休命。","yaoci":[{"pos":1,"type":"九","text":"无交害，匪咎，艰则无咎。","translation":"不与人交接则免遭祸害，虽有艰难但没有灾咎。在盛大之时更应谨慎低调。"},{"pos":2,"type":"九","text":"大车以载，有攸往，无咎。","translation":"用大车装载货物前行，有所往则无灾咎。凭借厚实的根基稳步前进。"},{"pos":3,"type":"九","text":"公用亨于天子，小人弗克。","translation":"公侯向天子进献贡品，小人则没有资格。居高位者当以公心行事。"},{"pos":4,"type":"九","text":"匪其彭，无咎。","translation":"不以盛大骄人，不炫耀财富，没有灾咎。盛而不骄，方能长久。"},{"pos":5,"type":"六","text":"厥孚交如，威如，吉。","translation":"以诚信与人交往，既有威严又不失亲和，吉祥。居大有之世，威信并行。"},{"pos":6,"type":"九","text":"自天祐之，吉，无不利。","translation":"来自上天的保佑，吉祥，无处不利。顺应天道者得天助。"}],"jijing":"上吉","gua_ci_translation":"大为亨通。大有卦象征大获所有、丰收昌盛之象。","xiang_ci_translation":"火在天上，光明普照万物。君子当据此抑制邪恶、弘扬善行，顺应天命之美。"},{"id":15,"name":"谦","full_name":"地山谦","symbol":"䷎","upper":8,"lower":7,"gua_ci":"亨，君子有终。","xiang_ci":"地中有山，谦。君子以裒多益寡，称物平施。","yaoci":[{"pos":1,"type":"六","text":"谦谦君子，用涉大川，吉。","translation":"谦而又谦的君子，以此德行可以涉越大河，吉祥。谦德可以克服一切艰难。"},{"pos":2,"type":"六","text":"鸣谦，贞吉。","translation":"谦虚的名声传播开来，坚守正道则吉。谦德闻名而受人敬重。"},{"pos":3,"type":"九","text":"劳谦，君子有终，吉。","translation":"勤勉谦逊，功劳卓著而不自夸，君子有始有终，吉祥。有功而不居功。"},{"pos":4,"type":"六","text":"无不利，撝谦。","translation":"行事无所不利，发挥谦逊的美德而恰到好处。谦德发挥于行动之中。"},{"pos":5,"type":"六","text":"不富以其邻，利用侵伐，无不利。","translation":"不以富裕自夸，以此为邻。利于征讨不义，无所不利。谦逊并非懦弱，必要时应果断行事。"},{"pos":6,"type":"六","text":"鸣谦，利用行师，征邑国。","translation":"谦逊之名远播，利于统率军队征伐邑国。以谦德服人，即使动武也名正言顺。"}],"jijing":"上吉","gua_ci_translation":"亨通，谦虚的君子必有好结果。谦卦是六十四卦中唯一六爻皆吉的卦，象征谦逊之美德。","xiang_ci_translation":"地中有山，高山隐于地中，象征谦逊。君子当据此取多余以补不足，衡量事物的轻重而公平施予。"},{"id":16,"name":"豫","full_name":"雷地豫","symbol":"䷏","upper":4,"lower":8,"gua_ci":"利建侯行师。","xiang_ci":"雷出地奋，豫。先王以作乐崇德，殷荐之上帝，以配祖考。","yaoci":[{"pos":1,"type":"六","text":"鸣豫，凶。","translation":"因过度享乐而沾沾自喜，凶险。沉溺于安逸之中，丧失警觉。"},{"pos":2,"type":"六","text":"介于石，不终日，贞吉。","translation":"坚如磐石，不待终日便能决断，坚守正道则吉。能够在安乐中保持清醒果断。"},{"pos":3,"type":"六","text":"盱豫，悔。迟有悔。","translation":"仰慕他人的安乐而追随，必有悔恨。迟迟不能觉悟，悔恨更大。随波逐流终非正途。"},{"pos":4,"type":"九","text":"由豫，大有得。勿疑，朋盍簪。","translation":"由自己主导安乐，大有收获。不必疑虑，朋友纷纷前来聚合。以安乐感召他人。"},{"pos":5,"type":"六","text":"贞疾，恒不死。","translation":"坚守正道以对付疾病（隐患），长久坚持则不会灭亡。居安思危，防微杜渐。"},{"pos":6,"type":"六","text":"冥豫，成有渝，无咎。","translation":"沉迷于昏暗的享乐中，若能改变则无灾咎。迷途知返，尚可补救。"}],"jijing":"吉","gua_ci_translation":"利于建立诸侯、出兵征伐。豫卦象征喜悦、安乐与预备，雷出地奋，振奋人心。","xiang_ci_translation":"雷声轰鸣于大地之上，万物振奋。先王据此制作音乐、推崇德行，隆重地献祭于上帝，并以此配享祖先。"},{"id":17,"name":"随","full_name":"泽雷随","symbol":"䷐","upper":2,"lower":4,"gua_ci":"元亨利贞，无咎。","xiang_ci":"泽中有雷，随。君子以向晦入宴息。","yaoci":[{"pos":1,"type":"九","text":"官有渝，贞吉。出门交有功。","translation":"本职之事有所改变，坚守正道则吉。出门与人交往必能建功。随变而动，顺应局势。"},{"pos":2,"type":"六","text":"系小子，失丈夫。","translation":"牵系于小子，则失去了丈夫（大人物）。随顺时要有选择，不可因小失大。"},{"pos":3,"type":"六","text":"系丈夫，失小子。随有求得，利居贞。","translation":"牵系于大丈夫，则失去了小子。随顺正道有所求而有所得，宜安居守正。择善而从。"},{"pos":4,"type":"九","text":"随有获，贞凶。有孚在道，以明，何咎。","translation":"随顺他人而有收获，但若动机不纯则凶。心怀诚信，坚守正道并保持光明磊落，何咎之有？"},{"pos":5,"type":"九","text":"孚于嘉，吉。","translation":"在美好的事物上保持诚信，吉祥。随顺善美之事。"},{"pos":6,"type":"六","text":"拘系之，乃从维之。王用亨于西山。","translation":"先被拘系，后来又被维系住。君王在西山举行祭祀。随顺到了极点反而被束缚，但最终以诚意感化。"}],"jijing":"吉","gua_ci_translation":"大为亨通，利于坚守正道，没有灾咎。随卦象征随顺时势、因时而变。","xiang_ci_translation":"泽中有雷，雷藏于泽中。君子据此在日暮时分安歇宴饮，顺应天时的作息。"},{"id":18,"name":"蛊","full_name":"山风蛊","symbol":"䷑","upper":7,"lower":5,"gua_ci":"元亨，利涉大川。先甲三日，后甲三日。","xiang_ci":"山下有风，蛊。君子以振民育德。","yaoci":[{"pos":1,"type":"六","text":"干父之蛊，有子，考无咎，厉，终吉。","translation":"匡正父辈留下的积弊，有这样的好儿子，父辈可以免于灾咎。虽有困难，但最终吉祥。纠正过失需要勇气。"},{"pos":2,"type":"九","text":"干母之蛊，不可贞。","translation":"匡正母辈的积弊，不可过于刚硬，须以柔顺的方式逐渐纠正。"},{"pos":3,"type":"九","text":"干父之蛊，小有悔，无大咎。","translation":"匡正父辈的积弊，稍有悔恨，但没有大咎。尽力而为，虽不完美也无大碍。"},{"pos":4,"type":"六","text":"裕父之蛊，往见吝。","translation":"宽容父辈的积弊而不急于纠正，继续下去则有遗憾。过于软弱，不思改革。"},{"pos":5,"type":"六","text":"干父之蛊，用誉。","translation":"匡正父辈的积弊，因此而获得赞誉。改革得当，功成受赏。"},{"pos":6,"type":"九","text":"不事王侯，高尚其事。","translation":"不愿侍奉王侯，保持自己志向的高洁。超然于世俗功利之外。"}],"jijing":"吉","gua_ci_translation":"大为亨通，利于涉越大河。在甲日的前三天做准备，后三天来收尾。蛊卦象征积弊之败坏与革新整顿。","xiang_ci_translation":"山下有风，风被山阻则散布不畅，万物因此败坏。君子当据此振作民众精神、培育民众品德。"},{"id":19,"name":"临","full_name":"地泽临","symbol":"䷒","upper":8,"lower":2,"gua_ci":"元亨利贞。至于八月有凶。","xiang_ci":"泽上有地，临。君子以教思无穷，容保民无疆。","yaoci":[{"pos":1,"type":"九","text":"咸临，贞吉。","translation":"以感应之心亲临指导，坚守正道则吉祥。以真诚感化百姓。"},{"pos":2,"type":"九","text":"咸临，吉，无不利。","translation":"以感应之心亲临指导，吉祥，无处不利。广泛地感化影响。"},{"pos":3,"type":"六","text":"甘临，无攸利。既忧之，无咎。","translation":"以甜言蜜语式的怀柔手段来临，没有实际益处。若能对此有所忧虑反省，则无灾咎。巧言令色不如真诚。"},{"pos":4,"type":"六","text":"至临，无咎。","translation":"亲自到达现场体察，没有灾咎。身体力行、深入实际。"},{"pos":5,"type":"六","text":"知临，大君之宜，吉。","translation":"以明智的方式治理天下，是大君应有的方式，吉祥。知人善任是临民之道。"},{"pos":6,"type":"六","text":"敦临，吉，无咎。","translation":"以敦厚真诚的态度治理，吉祥，没有灾咎。厚德载物，至诚感人。"}],"jijing":"吉中带凶","gua_ci_translation":"大为亨通，利于坚守正道。但到了八月将有凶险。临卦象征居高临下、以大临小。","xiang_ci_translation":"泽上有地，水润泽大地。君子据此教化思虑无穷，宽容保护万民无边。"},{"id":20,"name":"观","full_name":"风地观","symbol":"䷓","upper":5,"lower":8,"gua_ci":"盥而不荐，有孚颙若。","xiang_ci":"风行地上，观。先王以省方观民设教。","yaoci":[{"pos":1,"type":"六","text":"童观，小人无咎，君子吝。","translation":"像幼童一样浅薄地观察事物，小人尚可无咎，君子则不免遗憾。见识浅薄是君子之耻。"},{"pos":2,"type":"六","text":"窥观，利女贞。","translation":"从门缝中偷看，只适合女子守正之象。见识狭窄，格局受限。"},{"pos":3,"type":"六","text":"观我生，进退。","translation":"观察自身的言行得失，以决定进退。反躬自省，审视自身。"},{"pos":4,"type":"六","text":"观国之光，利用宾于王。","translation":"观察国家光辉的治绩，利于作为宾客辅佐君王。观国之盛而愿效其力。"},{"pos":5,"type":"九","text":"观我生，君子无咎。","translation":"观察自身的言行得失，君子没有灾咎。不断自省修身。"},{"pos":6,"type":"九","text":"观其生，君子无咎。","translation":"观察天下百姓的行事，君子没有灾咎。居高望远，心系苍生。"}],"jijing":"中","gua_ci_translation":"祭祀时洗手献酒而不必进献祭品，心怀虔诚，仪态庄严肃穆。观卦象征观察与被观察。","xiang_ci_translation":"风行于大地之上，万物皆受其化。先王据此巡视四方、观察民情、设立教化。"},{"id":21,"name":"噬嗑","full_name":"火雷噬嗑","symbol":"䷔","upper":3,"lower":4,"gua_ci":"亨，利用狱。","xiang_ci":"雷电，噬嗑。先王以明罚敕法。","yaoci":[{"pos":1,"type":"九","text":"屦校灭趾，无咎。","translation":"脚上戴着刑具，遮住了脚趾，惩戒轻微，使之知错能改，故无灾咎。初犯小惩，防微杜渐。"},{"pos":2,"type":"六","text":"噬肤灭鼻，无咎。","translation":"咬噬柔软的皮肤，伤了鼻子，没有灾咎。惩治稍有过度，但目的纯正。"},{"pos":3,"type":"六","text":"噬腊肉，遇毒，小吝，无咎。","translation":"咬噬干硬的腊肉，遇到毒虫。稍有困难，但最终无咎。执法遇到阻碍，耐心克服。"},{"pos":4,"type":"九","text":"噬干胏，得金矢，利艰贞，吉。","translation":"咬噬带骨的干肉，得到一枚铜箭头。在艰难中坚守正道则吉。执法虽难，终有所获。"},{"pos":5,"type":"六","text":"噬干肉，得黄金，贞厉，无咎。","translation":"咬噬干肉，得到黄金。处境危险但坚守正道，没有灾咎。刚柔并济，秉公执法。"},{"pos":6,"type":"九","text":"何校灭耳，凶。","translation":"肩上扛着沉重的枷锁，遮住了耳朵，听不进劝诫，凶险。罪大恶极，执法必严。"}],"jijing":"中吉","gua_ci_translation":"亨通，利于使用刑法。噬嗑卦象征咬合、咀嚼，引申为以法治刑狱、惩恶扬善。","xiang_ci_translation":"雷电交加，威明并行。先王据此明示刑罚、整饬法令，使法令如雷电般威慑人心。"},{"id":22,"name":"贲","full_name":"山火贲","symbol":"䷕","upper":7,"lower":3,"gua_ci":"亨，小利有攸往。","xiang_ci":"山下有火，贲。君子以明庶政，无敢折狱。","yaoci":[{"pos":1,"type":"九","text":"贲其趾，舍车而徒。","translation":"修饰脚趾，舍车而步行。注重脚下的起点，安分守己，不贪图虚荣。"},{"pos":2,"type":"六","text":"贲其须。","translation":"修饰胡须。依附于他人而得其文饰，非独立自主之美。"},{"pos":3,"type":"九","text":"贲如濡如，永贞吉。","translation":"修饰得光洁润泽，长久坚守正道则吉祥。文质彬彬，恰到好处。"},{"pos":4,"type":"六","text":"贲如皤如，白马翰如，匪寇婚媾。","translation":"修饰得洁白素净，骑白马飞驰而来。并非寇盗，而是来求婚的。质朴与华丽并存。"},{"pos":5,"type":"六","text":"贲于丘园，束帛戋戋，吝，终吉。","translation":"修饰丘陵园林，以微薄的束帛作为聘礼。虽然寒酸，但最终吉祥。重诚意而轻物质。"},{"pos":6,"type":"九","text":"白贲，无咎。","translation":"以白色为饰，不加雕琢，没有灾咎。极简之美，返璞归真。"}],"jijing":"中吉","gua_ci_translation":"亨通，稍有所往则有利。贲卦象征文饰、美化，以文采修饰实质。","xiang_ci_translation":"山下有火，火光照耀山体，文采斐然。君子据此明察各项政务，但不以文饰之态度轻率断狱（重实质而非形式）。"},{"id":23,"name":"剥","full_name":"山地剥","symbol":"䷖","upper":7,"lower":8,"gua_ci":"不利有攸往。","xiang_ci":"山附于地，剥。上以厚下安宅。","yaoci":[{"pos":1,"type":"六","text":"剥床以足，蔑，贞凶。","translation":"剥落开始于床脚，床脚受损，坚守也凶。根基动摇，灾祸已从底部开始。"},{"pos":2,"type":"六","text":"剥床以辨，蔑，贞凶。","translation":"剥落到了床的分辨处，床板受损，坚守也凶。侵蚀在加深，形势更危急。"},{"pos":3,"type":"六","text":"剥之，无咎。","translation":"剥落之象已显，但没有灾咎。能及时察觉剥落之势而顺应之。"},{"pos":4,"type":"六","text":"剥床以肤，凶。","translation":"剥落到了床面（人卧之处），凶险。切身之害已无可回避。"},{"pos":5,"type":"六","text":"贯鱼，以宫人宠，无不利。","translation":"像贯穿的鱼一样依次排列，以宫人的身份受宠，无处不利。顺从之道在剥落之时可保平安。"},{"pos":6,"type":"九","text":"硕果不食，君子得舆，小人剥庐。","translation":"硕大的果实没有被吃掉（仅存一阳），君子得到可乘之车（尚有转机），小人则连住所也被剥去。剥极而复，一线生机。"}],"jijing":"凶","gua_ci_translation":"不利于有所前往。剥卦象征剥落、侵蚀，阴气盛极而阳道衰微。","xiang_ci_translation":"山依附于大地，山石剥落。居上位者当据此厚待下民、安定住宅基础。"},{"id":24,"name":"复","full_name":"地雷复","symbol":"䷗","upper":8,"lower":4,"gua_ci":"亨。出入无疾，朋来无咎。反复其道，七日来复。利有攸往。","xiang_ci":"雷在地中，复。先王以至日闭关，商旅不行，后不省方。","yaoci":[{"pos":1,"type":"九","text":"不远复，无祇悔，元吉。","translation":"偏离正道不远便迅速返回，不至于后悔，大吉。知错速改，最为可贵。"},{"pos":2,"type":"六","text":"休复，吉。","translation":"美好地回归正道，吉祥。以休美之心返本归正。"},{"pos":3,"type":"六","text":"频复，厉，无咎。","translation":"屡次犯错又屡次改正，虽处境危险但无灾咎。反复折腾，虽不够好但有救。"},{"pos":4,"type":"六","text":"中行独复。","translation":"走在中途，独自回归正道。不随波逐流，独立坚守正道。"},{"pos":5,"type":"六","text":"敦复，无悔。","translation":"以敦厚之心回归正道，没有悔恨。真诚笃实地改过自新。"},{"pos":6,"type":"六","text":"迷复，凶，有灾眚。用行师，终有大败。以其国，君凶，至于十年不克征。","translation":"迷失了回归正道之路，凶险，有灾祸。出兵征伐终将大败。治国则君凶，十年都不能恢复元气。执迷不悟，万劫不复。"}],"jijing":"吉","gua_ci_translation":"亨通。出入皆平安，朋友到来也无灾咎。天道循环往复，七日来复。利于有所前往。复卦象征阳气复生、万象更新。","xiang_ci_translation":"雷在地中，阳气萌动。先王据此在冬至日关闭关口，商旅停业，君王也不巡行四方，以养微阳。"},{"id":25,"name":"无妄","full_name":"天雷无妄","symbol":"䷘","upper":1,"lower":4,"gua_ci":"元亨利贞。其匪正有眚，不利有攸往。","xiang_ci":"天下雷行，物与无妄。先王以茂对时育万物。","yaoci":[{"pos":1,"type":"九","text":"无妄，往吉。","translation":"不妄为，前行则吉祥。顺应天道，自然顺利。"},{"pos":2,"type":"六","text":"不耕获，不菑畬，则利有攸往。","translation":"不耕种却有收获，不开荒却有熟田——并非妄为而有得，顺应自然则利于前行。不期而获乃天赐。"},{"pos":3,"type":"六","text":"无妄之灾，或系之牛，行人之得，邑人之灾。","translation":"意想不到的灾祸：有人把牛拴在路边，过路人顺手牵走，村人却蒙受了损失。无辜受灾，非己之过。"},{"pos":4,"type":"九","text":"可贞，无咎。","translation":"可以坚守正道，没有灾咎。安分守己。"},{"pos":5,"type":"九","text":"无妄之疾，勿药有喜。","translation":"意想不到的疾病，不用吃药自然会好。无需刻意干预，自然痊愈。"},{"pos":6,"type":"九","text":"无妄，行有眚，无攸利。","translation":"不妄为却仍有灾祸，前行不利。时运不济，宜静不宜动。"}],"jijing":"吉中带凶","gua_ci_translation":"大为亨通，利于坚守正道。若行为不守正道则有灾祸，不利于有所前往。无妄卦象征不妄为、顺应天道。","xiang_ci_translation":"天下雷行，万物各得其时。先王据此以旺盛的精力顺应时令、培育万物。"},{"id":26,"name":"大畜","full_name":"山天大畜","symbol":"䷙","upper":7,"lower":1,"gua_ci":"利贞。不家食，吉，利涉大川。","xiang_ci":"天在山中，大畜。君子以多识前言往行，以畜其德。","yaoci":[{"pos":1,"type":"九","text":"有厉，利已。","translation":"有危险，利于停止前进。知险而止，不冒进。"},{"pos":2,"type":"九","text":"舆说辐。","translation":"车轮脱掉了辐条，车不能行。暂且停滞，不可强行为之。"},{"pos":3,"type":"九","text":"良马逐，利艰贞。曰闲舆卫，利有攸往。","translation":"良马驰逐，利于在艰难中坚守正道。每日练习驾车的防卫技术，利于有所前往。积蓄实力再出发。"},{"pos":4,"type":"六","text":"童牛之牿，元吉。","translation":"小牛头上加了横木以防其顶人，大吉。防患于未然，从小约束。"},{"pos":5,"type":"六","text":"豮豕之牙，吉。","translation":"去势的公猪（已无凶性）虽有獠牙，不足为害，吉祥。化解危险于无形。"},{"pos":6,"type":"九","text":"何天之衢，亨。","translation":"何等通畅的天衢大道！亨通。积蓄到极处，前途无碍。"}],"jijing":"上吉","gua_ci_translation":"利于坚守正道。不贪恋家中的安逸而出仕，吉祥，利于涉越大河。大畜卦象征大量的蓄养与积聚。","xiang_ci_translation":"天在山中，山中有天，气象万千。君子当据此多学习前人的言行经验，以积蓄自己的品德与学识。"},{"id":27,"name":"颐","full_name":"山雷颐","symbol":"䷚","upper":7,"lower":4,"gua_ci":"贞吉。观颐，自求口实。","xiang_ci":"山下有雷，颐。君子以慎言语，节饮食。","yaoci":[{"pos":1,"type":"九","text":"舍尔灵龟，观我朵颐，凶。","translation":"舍弃你灵验的龟甲不用，却垂涎地看着别人大口吃东西，凶险。贪求外物而自弃天赋。"},{"pos":2,"type":"六","text":"颠颐，拂经于丘颐，征凶。","translation":"颠倒了颐养之道，违反了正常的求食方法，前往则凶。本末倒置。"},{"pos":3,"type":"六","text":"拂颐，贞凶。十年勿用，无攸利。","translation":"违背了颐养的常道，坚守也凶。十年之内不可有所作为，没有任何益处。固执不改，前途尽毁。"},{"pos":4,"type":"六","text":"颠颐，吉。虎视眈眈，其欲逐逐，无咎。","translation":"颠倒颐养之道以求食，反而吉祥。像老虎一样虎视眈眈地盯着猎物，欲望强烈地追逐，但没有灾咎。以非常之道求食虽不合常理，但动机纯正。"},{"pos":5,"type":"六","text":"拂经，居贞吉。不可涉大川。","translation":"违反常规的颐养方法，安居守正则吉。不可涉越大河。不安于本分，宜守不宜行。"},{"pos":6,"type":"九","text":"由颐，厉吉。利涉大川。","translation":"遵循颐养的常道，虽处境危险但吉祥，利于涉越大河。正当颐养天下之时。"}],"jijing":"中","gua_ci_translation":"坚守正道则吉祥。观察饮食之道，自己寻求食物之来源。颐卦象征颐养、养生。","xiang_ci_translation":"山下有雷，雷动于山下。君子据此谨慎言语、节制饮食，修身养性。"},{"id":28,"name":"大过","full_name":"泽风大过","symbol":"䷛","upper":2,"lower":5,"gua_ci":"栋桡。利有攸往，亨。","xiang_ci":"泽灭木，大过。君子以独立不惧，遁世无闷。","yaoci":[{"pos":1,"type":"六","text":"藉用白茅，无咎。","translation":"祭祀时用白茅垫在下面，恭敬至极，没有灾咎。以极其谨慎的态度对待非常之事。"},{"pos":2,"type":"九","text":"枯杨生稊，老夫得其女妻，无不利。","translation":"枯杨树长出了新芽，老汉娶了年轻女子为妻，无处不利。枯木逢春，老夫少妻虽不寻常，却也和谐。"},{"pos":3,"type":"九","text":"栋桡，凶。","translation":"栋梁弯曲不堪重负，凶险。过度的压力导致结构崩塌。"},{"pos":4,"type":"九","text":"栋隆，吉。有它，吝。","translation":"栋梁向上隆起能够支撑，吉祥。但若有其他变故则遗憾。能撑起局面但仍有隐患。"},{"pos":5,"type":"九","text":"枯杨生华，老妇得其士夫，无咎无誉。","translation":"枯杨树开了花，老妇人嫁给年轻男子，没有灾咎也没有赞誉。强弩之末，好景不长。"},{"pos":6,"type":"九","text":"过涉灭顶，凶，无咎。","translation":"涉水过深被淹没头顶，凶险。但知过而改则无咎。过涉之险虽凶，冒险亦有可谅之处。"}],"jijing":"凶中带吉","gua_ci_translation":"栋梁弯曲。利于有所前往，亨通。大过卦象征过度、非常之举。","xiang_ci_translation":"湖水淹没了树木，极为反常。君子当据此独立面对而不畏惧，遁世隐居而不苦闷。"},{"id":29,"name":"坎","full_name":"坎为水","symbol":"䷜","upper":6,"lower":6,"gua_ci":"有孚，维心亨，行有尚。","xiang_ci":"水洊至，习坎。君子以常德行，习教事。","yaoci":[{"pos":1,"type":"六","text":"习坎，入于坎窞，凶。","translation":"重重险阻，陷入深坑之中，凶险。一险未脱又一险。"},{"pos":2,"type":"九","text":"坎有险，求小得。","translation":"坑中有险境，只能求得小利。在困境中寻求小的突破口。"},{"pos":3,"type":"六","text":"来之坎坎，险且枕，入于坎窞，勿用。","translation":"来之坎坎，前险后也险，且躺且行。又陷入坑穴之中，不宜行动。四面皆险。"},{"pos":4,"type":"六","text":"樽酒簋贰，用缶，纳约自牖，终无咎。","translation":"用一壶酒、两碗食物，盛在瓦器中，从窗户递送进牢房，最终没有灾咎。在绝境中以简单的诚意感动他人。"},{"pos":5,"type":"九","text":"坎不盈，祇既平，无咎。","translation":"坑还没有填满，小丘已被铲平，没有灾咎。险阻逐渐平复。"},{"pos":6,"type":"六","text":"系用徽纆，寘于丛棘，三岁不得，凶。","translation":"被绳索捆绑，囚禁在荆棘丛中，三年不得解脱，凶险。身陷囹圄，久困不脱。"}],"jijing":"凶","gua_ci_translation":"心怀诚信，内心亨通。行为会受到尊崇。坎卦象征重重险阻，前有险陷。","xiang_ci_translation":"水一波接一波地涌来，习练于险阻之中。君子当据此保持恒久的品德，反复练习政教事务。"},{"id":30,"name":"离","full_name":"离为火","symbol":"䷝","upper":3,"lower":3,"gua_ci":"利贞，亨。畜牝牛，吉。","xiang_ci":"明两作，离。大人以继明照于四方。","yaoci":[{"pos":1,"type":"九","text":"履错然，敬之，无咎。","translation":"步履错乱地开始行动，但以恭敬之心对待，没有灾咎。初行虽有不慎，敬慎可免过。"},{"pos":2,"type":"六","text":"黄离，元吉。","translation":"附着于黄色（中道之色），大吉。居中守正，恰到好处。"},{"pos":3,"type":"九","text":"日昃之离，不鼓缶而歌，则大耋之嗟，凶。","translation":"日偏西时的余光，若不击缶高歌以待终，则为老迈而叹息，凶。日暮之象，应及时调整心态。"},{"pos":4,"type":"九","text":"突如其来如，焚如，死如，弃如。","translation":"突然而来，如同烈火焚烧、死亡、被抛弃。来得突然、去得仓促，不可测度。"},{"pos":5,"type":"六","text":"出涕沱若，戚嗟若，吉。","translation":"泪如雨下，忧伤叹息，但因居中守正而吉祥。虽处境悲苦，但守正可保平安。"},{"pos":6,"type":"九","text":"王用出征，有嘉折首，获匪其丑，无咎。","translation":"君王出征，有嘉赏斩杀敌首，俘获的不是一般士卒，没有灾咎。正义之师，必克强敌。"}],"jijing":"吉","gua_ci_translation":"利于坚守正道，亨通。蓄养母牛般的柔顺之德，吉祥。离卦象征光明、附着。","xiang_ci_translation":"光明接连出现，日复一日。大人当据此以持续的光明智慧照耀四方。"},{"id":31,"name":"咸","full_name":"泽山咸","symbol":"䷞","upper":2,"lower":7,"gua_ci":"亨，利贞。取女吉。","xiang_ci":"山上有泽，咸。君子以虚受人。","yaoci":[{"pos":1,"type":"六","text":"咸其拇。","translation":"感应到了脚大趾。最初步的感应，影响尚浅。"},{"pos":2,"type":"六","text":"咸其腓，凶。居吉。","translation":"感应到了小腿肚，凶险。安于居所则吉。有所行动便凶。感应虽已加深，但不宜冒进。"},{"pos":3,"type":"九","text":"咸其股，执其随，往吝。","translation":"感应到了大腿，盲目跟从他人前行，则遗憾。随大流而不自主判断。"},{"pos":4,"type":"九","text":"贞吉，悔亡。憧憧往来，朋从尔思。","translation":"坚守正道则吉祥，悔恨消失。心意不定地往来徘徊，朋友终会赞同你的想法。真诚感应，终获共鸣。"},{"pos":5,"type":"九","text":"咸其脢，无悔。","translation":"感应到了背部脊肉，没有悔恨。感应深入内心，默契无声。"},{"pos":6,"type":"六","text":"咸其辅颊舌。","translation":"感应到了面颊与舌头。只是口头上的感应，流于表面。言辞之感不如心志之感。"}],"jijing":"吉","gua_ci_translation":"亨通，利于坚守正道。娶女子，吉祥。咸卦象征感应、相互影响。","xiang_ci_translation":"山上有泽，山泽相互感应。君子当据此虚心接纳他人。"},{"id":32,"name":"恒","full_name":"雷风恒","symbol":"䷟","upper":4,"lower":5,"gua_ci":"亨，无咎，利贞，利有攸往。","xiang_ci":"雷风，恒。君子以立不易方。","yaoci":[{"pos":1,"type":"六","text":"浚恒，贞凶，无攸利。","translation":"过度深入地追求恒久，反而凶险，无处有利。恒久也须有度，不可执泥不变。"},{"pos":2,"type":"九","text":"悔亡。","translation":"悔恨消失。能及时调整而不失恒久之义。"},{"pos":3,"type":"九","text":"不恒其德，或承之羞，贞吝。","translation":"不能长久保持自己的品德，招致羞辱，坚守也难免遗憾。半途而废之辱。"},{"pos":4,"type":"九","text":"田无禽。","translation":"田猎一无所获。恒久之道用在不当之处，白费力气。"},{"pos":5,"type":"六","text":"恒其德，贞，妇人吉，夫子凶。","translation":"长久保持品德，坚守正道。妇人如此则吉，男人如此则凶。男刚女柔各有所宜，男人应以刚健进取为主。"},{"pos":6,"type":"六","text":"振恒，凶。","translation":"动摇了恒久之道，凶险。反复无常，失去恒心。"}],"jijing":"中吉","gua_ci_translation":"亨通，没有灾咎，利于坚守正道，利于有所前往。恒卦象征长久、恒定不变。","xiang_ci_translation":"雷与风相随，永恒不变。君子当据此确立不可改变的做人方向。"},{"id":33,"name":"遁","full_name":"天山遁","symbol":"䷠","upper":1,"lower":7,"gua_ci":"亨，小利贞。","xiang_ci":"天下有山，遁。君子以远小人，不恶而严。","yaoci":[{"pos":1,"type":"六","text":"遁尾，厉，勿用有攸往。","translation":"退避时落在了最后面（尾巴被咬），危险，不宜有所前往。已经迟了一步。"},{"pos":2,"type":"六","text":"执之用黄牛之革，莫之胜说。","translation":"用黄牛皮绳绑住，牢固到无法挣脱。决心已定，意志坚定不可动摇。"},{"pos":3,"type":"九","text":"系遁，有疾厉，畜臣妾，吉。","translation":"被牵系住而无法退避，如同有了疾病，危险。只能畜养家臣妾，以这种方式获吉。退避不得，退而求其次。"},{"pos":4,"type":"九","text":"好遁，君子吉，小人否。","translation":"喜爱隐退，君子这样做吉祥，小人则不然。君子明理知退，小人恋栈不肯放手。"},{"pos":5,"type":"九","text":"嘉遁，贞吉。","translation":"从容优美地退避，坚守正道则吉。审时度势地从容隐退。"},{"pos":6,"type":"九","text":"肥遁，无不利。","translation":"高飞远遁，无处不利。完全脱离纷争，超然于世外。"}],"jijing":"中吉","gua_ci_translation":"亨通，稍宜坚守正道。遁卦象征退避、隐退，以退为进。","xiang_ci_translation":"天下有山，山高而天退，象征退避。君子当据此远离小人，不与之恶语相向而保持威严。"},{"id":34,"name":"大壮","full_name":"雷天大壮","symbol":"䷡","upper":4,"lower":1,"gua_ci":"利贞。","xiang_ci":"雷在天上，大壮。君子以非礼弗履。","yaoci":[{"pos":1,"type":"九","text":"壮于趾，征凶，有孚。","translation":"力量表现在脚趾上，冒进则凶。心怀诚信。壮于始而急于行，必败。"},{"pos":2,"type":"九","text":"贞吉。","translation":"坚守正道则吉祥。不妄用壮力。"},{"pos":3,"type":"九","text":"小人用壮，君子用罔，贞厉。羝羊触藩，羸其角。","translation":"小人恃强凌弱，君子则不如此。坚守正道但处境危险。公羊用角撞击篱笆，角被缠住。以壮逞强必受困。"},{"pos":4,"type":"九","text":"贞吉，悔亡。藩决不羸，壮于大舆之辐。","translation":"坚守正道则吉祥，悔恨消失。篱笆被撞破，角不再被缠住。壮于大车的车辐，力量用得其所。"},{"pos":5,"type":"六","text":"丧羊于易，无悔。","translation":"在田边丧失了羊，没有悔恨。不与小人计较，洒脱放下。"},{"pos":6,"type":"六","text":"羝羊触藩，不能退，不能遂，无攸利。艰则吉。","translation":"公羊撞击篱笆，既不能后退也不能前进，无处有利。在艰难中坚守则吉。壮极而困，知止方吉。"}],"jijing":"吉","gua_ci_translation":"利于坚守正道。大壮卦象征大者壮盛、力量充沛。","xiang_ci_translation":"雷在天上轰鸣，声威壮盛。君子当据此不做非礼之事，以礼约束自己的强盛之力。"},{"id":35,"name":"晋","full_name":"火地晋","symbol":"䷢","upper":3,"lower":8,"gua_ci":"康侯用锡马蕃庶，昼日三接。","xiang_ci":"明出地上，晋。君子以自昭明德。","yaoci":[{"pos":1,"type":"六","text":"晋如，摧如，贞吉。罔孚，裕，无咎。","translation":"前进却遭排挤打击，坚守正道则吉。尚未赢得信任时，应宽宏从容以待，没有灾咎。"},{"pos":2,"type":"六","text":"晋如，愁如，贞吉。受兹介福，于其王母。","translation":"前进中满怀忧愁，坚守正道则吉祥。承受此等大福，来自王母（太后）的恩赐。虽有困难，但终得贵人相助。"},{"pos":3,"type":"六","text":"众允，悔亡。","translation":"众人信赖而跟随，悔恨消失。以诚信获众人认同。"},{"pos":4,"type":"九","text":"晋如鼫鼠，贞厉。","translation":"前进如鼫鼠般胆小无能，贪婪而技穷，坚守也危险。德不配位，必有灾殃。"},{"pos":5,"type":"六","text":"悔亡，失得勿恤。往吉，无不利。","translation":"悔恨消失，不必为得失忧虑。前行则吉祥，无处不利。不计较一时得失。"},{"pos":6,"type":"九","text":"晋其角，维用伐邑，厉吉，无咎，贞吝。","translation":"以锋芒毕露的方式晋升，只能用来讨伐自己的城邑。危险中虽有吉祥，但终究有遗憾。逞强冒进终非善策。"}],"jijing":"吉","gua_ci_translation":"康侯被天子赐予良马，一日之内三次受接见。晋卦象征晋升、光明进取。","xiang_ci_translation":"光明升出于大地之上，前途光明。君子当据此自我彰显光明的品德。"},{"id":36,"name":"明夷","full_name":"地火明夷","symbol":"䷣","upper":8,"lower":3,"gua_ci":"利艰贞。","xiang_ci":"明入地中，明夷。君子以莅众，用晦而明。","yaoci":[{"pos":1,"type":"九","text":"明夷于飞，垂其翼。君子于行，三日不食。有攸往，主人有言。","translation":"光明受伤之鸟在飞翔，垂下了翅膀。君子在路途中行走，三天没有进食。有所前往，所居之处的主人会有责难之言。明哲保身之象。"},{"pos":2,"type":"六","text":"明夷，夷于左股，用拯马壮，吉。","translation":"光明受伤，伤了左大腿。用强壮的马拯救，吉祥。虽有损伤但得援救，化险为夷。"},{"pos":3,"type":"九","text":"明夷于南狩，得其大首，不可疾，贞。","translation":"光明受伤之际，在南方的征战中俘获了敌方首领。但不可操之过急，宜坚守正道。有实力也不可急躁。"},{"pos":4,"type":"六","text":"入于左腹，获明夷之心，于出门庭。","translation":"进入左侧腹中，探明了光明受伤的原因，于是走出家门。洞察局势后及时退出险境。"},{"pos":5,"type":"六","text":"箕子之明夷，利贞。","translation":"如箕子一般隐晦其明智，利于坚守正道。在乱世中保全自我，不以聪明外露。"},{"pos":6,"type":"六","text":"不明晦，初登于天，后入于地。","translation":"不识晦明之理，起初升到天上，最终却跌入地中。不知进退之祸。"}],"jijing":"凶中带吉","gua_ci_translation":"利于在艰难中坚守正道。明夷卦象征光明受伤、贤者隐晦。","xiang_ci_translation":"光明隐入大地之中。君子在治理民众时，应隐藏锋芒而内蕴光明，大智若愚。"},{"id":37,"name":"家人","full_name":"风火家人","symbol":"䷤","upper":5,"lower":3,"gua_ci":"利女贞。","xiang_ci":"风自火出，家人。君子以言有物而行有恒。","yaoci":[{"pos":1,"type":"九","text":"闲有家，悔亡。","translation":"以家规约束家人，悔恨消失。防患于未然。"},{"pos":2,"type":"六","text":"无攸遂，在中馈，贞吉。","translation":"不谋求突出的成就，专心做好烹饪饮食（主内）之事，坚守正道则吉。安守本分。"},{"pos":3,"type":"九","text":"家人嗃嗃，悔厉，吉。妇子嘻嘻，终吝。","translation":"家人严厉嗃嗃（家教严格），虽有怨言和悔恨但最终吉祥。妇人孩子嘻嘻哈哈（家教松散），最终必有遗憾。治家宜严不宜宽。"},{"pos":4,"type":"六","text":"富家，大吉。","translation":"使家庭富裕，大吉。家庭兴旺发达。"},{"pos":5,"type":"九","text":"王假有家，勿恤，吉。","translation":"君王以其美德感化全家，不必忧虑，吉祥。以身作则，上行下效。"},{"pos":6,"type":"九","text":"有孚威如，终吉。","translation":"以诚信和威严治家，最终吉祥。恩威并济，家道乃成。"}],"jijing":"吉","gua_ci_translation":"利于女子坚守正道。家人卦象征家庭伦理、治家之道。","xiang_ci_translation":"风从火中产生（炊烟升腾），家人之象。君子言辞有实质内容，行为有恒久操守。"},{"id":38,"name":"睽","full_name":"火泽睽","symbol":"䷥","upper":3,"lower":2,"gua_ci":"小事吉。","xiang_ci":"上火下泽，睽。君子以同而异。","yaoci":[{"pos":1,"type":"九","text":"悔亡。丧马，勿逐自复。见恶人，无咎。","translation":"悔恨消失。丢了马不必去追，它自己会回来。遇到恶人也不必躲避，以德化之则无咎。宽以待人，物极必反。"},{"pos":2,"type":"九","text":"遇主于巷，无咎。","translation":"在巷子里遇到主人，没有灾咎。不经意间遇到贵人。"},{"pos":3,"type":"六","text":"见舆曳，其牛掣，其人天且劓。无初有终。","translation":"看见大车被拉住，拉车的牛被牵制，赶车的人受了黥面劓鼻之刑。起初不利，最终却有好结果。看似乖违，终将和合。"},{"pos":4,"type":"九","text":"睽孤，遇元夫，交孚，厉，无咎。","translation":"孤独一人，遇到正直之人，以诚相交。虽有危险但没有灾咎。在背离中仍能找到同道。"},{"pos":5,"type":"六","text":"悔亡。厥宗噬肤，往何咎。","translation":"悔恨消失。与同宗之人如噬肤般亲密相交，前往有何灾咎？消除隔阂，重归于好。"},{"pos":6,"type":"九","text":"见豕负涂，载鬼一车。先张之弧，后说之弧。匪寇婚媾。往遇雨则吉。","translation":"看见猪满身污泥，车上载着鬼怪。先张弓欲射，后放下弓箭。原来不是强盗而是来求婚的。往前走遇到下雨则吉祥。虚惊一场，终逢喜事。"}],"jijing":"中","gua_ci_translation":"小事吉祥。睽卦象征背离、对立、乖违。","xiang_ci_translation":"上火下泽，火与泽性质相反。君子当据此求同存异，在差异中寻求和谐。"},{"id":39,"name":"蹇","full_name":"水山蹇","symbol":"䷦","upper":6,"lower":7,"gua_ci":"利西南，不利东北。利见大人，贞吉。","xiang_ci":"山上有水，蹇。君子以反身修德。","yaoci":[{"pos":1,"type":"六","text":"往蹇，来誉。","translation":"前往有艰难，不如归来反而获得赞誉。知难而退是明智之举。"},{"pos":2,"type":"六","text":"王臣蹇蹇，匪躬之故。","translation":"君王的臣子历尽艰难险阻，不是为了自己，而是为了公事。鞠躬尽瘁，非为一己之私。"},{"pos":3,"type":"九","text":"往蹇，来反。","translation":"前往有艰难，不如返回。"},{"pos":4,"type":"六","text":"往蹇，来连。","translation":"前往有艰难，回来联合众人共渡难关。"},{"pos":5,"type":"九","text":"大蹇，朋来。","translation":"大困难之中，朋友们前来帮助。患难见真情，得道多助。"},{"pos":6,"type":"六","text":"往蹇，来硕，吉。利见大人。","translation":"前往虽有艰难，但归来后有丰硕的成果，吉祥。利于面见大德之人。历经艰辛终成正果。"}],"jijing":"凶中带吉","gua_ci_translation":"利于向西南方，不利于向东北方。利于面见大德之人，坚守正道则吉祥。蹇卦象征行走困难、前路险阻。","xiang_ci_translation":"山上有水，水流受阻。君子当据此反躬自省、修养品德。"},{"id":40,"name":"解","full_name":"雷水解","symbol":"䷧","upper":4,"lower":6,"gua_ci":"利西南。无所往，其来复，吉。有攸往，夙吉。","xiang_ci":"雷雨作，解。君子以赦过宥罪。","yaoci":[{"pos":1,"type":"六","text":"无咎。","translation":"没有灾咎。困境初解，平安无事。"},{"pos":2,"type":"九","text":"田获三狐，得黄矢，贞吉。","translation":"田猎获得三只狐狸，又得到黄色的铜箭头，坚守正道则吉祥。清除小人（三狐），秉持中道（黄矢）。"},{"pos":3,"type":"六","text":"负且乘，致寇至，贞吝。","translation":"背着东西又坐车，招致强盗。贪婪招祸，坚守也有遗憾。"},{"pos":4,"type":"九","text":"解而拇，朋至斯孚。","translation":"解开了脚大趾的束缚，朋友们到来并以诚信相待。解除小的障碍，渐入佳境。"},{"pos":5,"type":"六","text":"君子维有解，吉。有孚于小人。","translation":"君子得以解脱困境，吉祥。以诚信感化小人。身正则天下归心。"},{"pos":6,"type":"六","text":"公用射隼于高墉之上，获之，无不利。","translation":"公侯在高墙上射落一只猛禽，捕获之，无处不利。清除祸害，大功告成。"}],"jijing":"吉","gua_ci_translation":"利于向西南方。没有要去的地方就返回，吉祥。有所前往时，早行则吉。解卦象征解除困难、缓解困境。","xiang_ci_translation":"雷雨交作而后放晴。君子当据此赦免过失、宽恕罪过。"},{"id":41,"name":"损","full_name":"山泽损","symbol":"䷨","upper":7,"lower":2,"gua_ci":"有孚，元吉，无咎，可贞，利有攸往。曷之用二簋，可用享。","xiang_ci":"山下有泽，损。君子以惩忿窒欲。","yaoci":[{"pos":1,"type":"九","text":"已事遄往，无咎，酌损之。","translation":"停下自己的事情迅速前往，没有灾咎，酌情减损自己。先公后私，当损则损。"},{"pos":2,"type":"九","text":"利贞，征凶。弗损益之。","translation":"利于坚守正道，征伐则凶。不必自我减损就能使他人获益。损己益人的方式须审慎。"},{"pos":3,"type":"六","text":"三人行，则损一人。一人行，则得其友。","translation":"三人同行则一人被减损（独见之智），一人独行则遇到朋友。损中有益、益中有损的辩证之理。"},{"pos":4,"type":"六","text":"损其疾，使遄有喜，无咎。","translation":"减损自己的疾病，迅速使之好转而有喜，没有灾咎。消除自身缺陷便是最大的增益。"},{"pos":5,"type":"六","text":"或益之十朋之龟，弗克违，元吉。","translation":"有人送来价值十朋的宝龟，无法拒绝，大吉。不请自来的善缘，当仁不让。"},{"pos":6,"type":"九","text":"弗损益之，无咎，贞吉。利有攸往，得臣无家。","translation":"不必减损自己而使他人获益，没有灾咎，坚守正道则吉祥。利于有所前往，得到贤臣而不必封其家室（公而忘私）。以不损之损为上。"}],"jijing":"吉","gua_ci_translation":"心怀诚信，大吉，没有灾咎，可以坚守正道，利于有所前往。用什么祭祀？两簋（ simplest offerings ）便足够了。损卦象征减损、节制。","xiang_ci_translation":"山下有泽，泽水减损以滋润山体。君子当据此抑制愤怒、窒塞欲望，自损以益人。"},{"id":42,"name":"益","full_name":"风雷益","symbol":"䷩","upper":5,"lower":4,"gua_ci":"利有攸往，利涉大川。","xiang_ci":"风雷，益。君子以见善则迁，有过则改。","yaoci":[{"pos":1,"type":"九","text":"利用为大作，元吉，无咎。","translation":"利于做大事，大吉，没有灾咎。天时助益之时，可大胆行动。"},{"pos":2,"type":"六","text":"或益之十朋之龟，弗克违，永贞吉。王用享于帝，吉。","translation":"有人送来价值十朋的宝龟，无法拒绝，长久坚守正道则吉祥。君王以此献祭于上帝，吉祥。重大福佑不可推辞。"},{"pos":3,"type":"六","text":"益之用凶事，无咎。有孚中行，告公用圭。","translation":"将增益用于救灾救难之事，没有灾咎。心怀诚信而行中道，手持圭璧报告公侯。"},{"pos":4,"type":"六","text":"中行告公从，利用为依迁国。","translation":"行中道报告公侯并获得遵从，利于以此为依托而迁徙国都。得助以行大事。"},{"pos":5,"type":"九","text":"有孚惠心，勿问，元吉。有孚惠我德。","translation":"有惠及他人之心，不必问卜，大吉。有诚信且惠及我的德行。以德施人，自受其福。"},{"pos":6,"type":"九","text":"莫益之，或击之，立心勿恒，凶。","translation":"没有人来增益他，反而有人攻击他。立心不坚定，凶险。贪求增益反而受损。"}],"jijing":"上吉","gua_ci_translation":"利于有所前往，利于涉越大河。益卦象征增益、助益。","xiang_ci_translation":"风与雷相互增益。君子当据此见到善行就追随，发现过失就改正。"},{"id":43,"name":"夬","full_name":"泽天夬","symbol":"䷪","upper":2,"lower":1,"gua_ci":"扬于王庭，孚号有厉。告自邑，不利即戎，利有攸往。","xiang_ci":"泽上于天，夬。君子以施禄及下，居德则忌。","yaoci":[{"pos":1,"type":"九","text":"壮于前趾，往不胜，为咎。","translation":"力量集中于前趾，冒然前往必不胜，反成灾咎。急于决断而实力不足。"},{"pos":2,"type":"九","text":"惕号，莫夜有戎，勿恤。","translation":"发出警号，夜晚有敌兵来犯，不必忧虑。保持警惕，有备无患。"},{"pos":3,"type":"九","text":"壮于頄，有凶。君子夬夬，独行遇雨，若濡有愠，无咎。","translation":"壮于面颧骨，有凶。君子果决行事，独自前行遇到大雨，淋湿了衣服而有些恼怒，但最终无咎。决断虽招人怨，但无实际灾祸。"},{"pos":4,"type":"九","text":"臀无肤，其行次且。牵羊悔亡，闻言不信。","translation":"臀部磨破了皮，行走踉跄。牵着羊走却还是后悔——听了劝告却不相信。犹豫不决，进退两难。"},{"pos":5,"type":"九","text":"苋陆夬夬，中行无咎。","translation":"像斩除路边杂草一样果决行事，行中道则无灾咎。刚毅果断又不失中道。"},{"pos":6,"type":"六","text":"无号，终有凶。","translation":"不再发出号令，最终仍有凶。优柔寡断，放任小人，终酿大祸。"}],"jijing":"吉中带凶","gua_ci_translation":"在朝廷上公开揭露小人的罪行，以诚信呼号但仍有危险。从自己的封邑出发，不利于立即动武，利于有所前往。夬卦象征决断、果决除小人。","xiang_ci_translation":"泽水上于天，水气上升。君子当据此将恩泽广施于下民，但居有德位则须戒忌骄傲。"},{"id":44,"name":"姤","full_name":"天风姤","symbol":"䷫","upper":1,"lower":5,"gua_ci":"女壮，勿用取女。","xiang_ci":"天下有风，姤。后以施命诰四方。","yaoci":[{"pos":1,"type":"六","text":"系于金柅，贞吉。有攸往，见凶。羸豕孚蹢躅。","translation":"系在金属的制动器上，坚守正道则吉。有所前往则见凶。被拴住的猪仍在挣扎躁动。及时制止坏事于萌芽之中。"},{"pos":2,"type":"九","text":"包有鱼，无咎。不利宾客。","translation":"厨房里有鱼，没有灾咎。但不利于招待宾客。好事不宜外传，独享其利。"},{"pos":3,"type":"九","text":"臀无肤，其行次且，厉，无大咎。","translation":"臀部磨破了皮，行走踉跄，危险，但没有大灾咎。虽处境艰难但损伤有限。"},{"pos":4,"type":"九","text":"包无鱼，起凶。","translation":"厨房里没有鱼，凶事由此而起。失去控制则祸患将至。"},{"pos":5,"type":"九","text":"以杞包瓜，含章，有陨自天。","translation":"用杞树枝条包着瓜，内涵华美，好运从天而降。以美德包容不期而遇的善缘。"},{"pos":6,"type":"九","text":"姤其角，吝，无咎。","translation":"只碰到对方的角尖，遗憾，但没有灾咎。相遇极浅，错过良机。"}],"jijing":"中","gua_ci_translation":"女子过于强壮，不宜娶这样的女子。姤卦象征不期而遇、偶然相逢。","xiang_ci_translation":"天下有风吹过，万物皆受其影响。君主当据此发布政令，晓谕四方。"},{"id":45,"name":"萃","full_name":"泽地萃","symbol":"䷬","upper":2,"lower":8,"gua_ci":"亨。王假有庙，利见大人，亨，利贞。用大牲吉，利有攸往。","xiang_ci":"泽上于地，萃。君子以除戎器，戒不虞。","yaoci":[{"pos":1,"type":"六","text":"有孚不终，乃乱乃萃，若号，一握为笑，勿恤，往无咎。","translation":"有诚信却不能坚持到底，于是混乱中仓促聚会。如有人号哭求援，一经握手便可转为欢笑。不必忧虑，前往没有灾咎。"},{"pos":2,"type":"六","text":"引吉，无咎。孚乃利用禴。","translation":"受人引导而吉祥，没有灾咎。心怀诚信，即使简单的祭祀也能获福。诚意胜于形式。"},{"pos":3,"type":"六","text":"萃如，嗟如，无攸利。往无咎，小吝。","translation":"聚集时叹息不已，没有利益。前往则无灾咎，但有小遗憾。聚之不得其道。"},{"pos":4,"type":"九","text":"大吉，无咎。","translation":"大吉，没有灾咎。聚集得其正道。"},{"pos":5,"type":"九","text":"萃有位，无咎。匪孚，元永贞，悔亡。","translation":"聚集于正位，没有灾咎。虽尚未完全取信于人，但长久守正则悔恨消失。以恒心聚人。"},{"pos":6,"type":"六","text":"赍咨涕洟，无咎。","translation":"悲伤叹息，泪涕纵横，但没有灾咎。痛心于未能聚集而自责，知忧则可免祸。"}],"jijing":"吉","gua_ci_translation":"亨通。君王来到宗庙祭祀，利于面见大德之人，亨通，利于坚守正道。用大牲祭祀则吉祥，利于有所前往。萃卦象征聚集、汇合。","xiang_ci_translation":"泽水高出地面，水汇聚成泽。君子当据此修治兵器，戒备不测之患。"},{"id":46,"name":"升","full_name":"地风升","symbol":"䷭","upper":8,"lower":5,"gua_ci":"元亨。用见大人，勿恤。南征吉。","xiang_ci":"地中生木，升。君子以顺德，积小以高大。","yaoci":[{"pos":1,"type":"六","text":"允升，大吉。","translation":"以诚信之心上升，大吉。得到众人信任而获提拔。"},{"pos":2,"type":"九","text":"孚乃利用禴，无咎。","translation":"心怀诚信，即使简单的祭祀也能获福佑，没有灾咎。诚意足以感人。"},{"pos":3,"type":"九","text":"升虚邑。","translation":"上升至空虚的城邑。所向无阻，顺利前行。"},{"pos":4,"type":"六","text":"王用亨于岐山，吉，无咎。","translation":"君王在岐山举行祭祀，吉祥，没有灾咎。以正当手段获得晋升。"},{"pos":5,"type":"六","text":"贞吉，升阶。","translation":"坚守正道则吉祥，登上台阶步步高升。稳步上升。"},{"pos":6,"type":"六","text":"冥升，利于不息之贞。","translation":"在昏暗中仍然上升不止，利于不懈地坚守正道。永不停止的进取之心。"}],"jijing":"吉","gua_ci_translation":"大为亨通。利于面见大德之人，不必忧虑。向南征伐则吉祥。升卦象征上升、进取。","xiang_ci_translation":"地中生出树木，树木从泥土中不断向上生长。君子当据此顺行美德，积小成大、由低到高。"},{"id":47,"name":"困","full_name":"泽水困","symbol":"䷮","upper":2,"lower":6,"gua_ci":"亨，贞。大人吉，无咎。有言不信。","xiang_ci":"泽无水，困。君子以致命遂志。","yaoci":[{"pos":1,"type":"六","text":"臀困于株木，入于幽谷，三岁不觌。","translation":"臀部困于枯木之中，陷入幽暗的深谷，三年不见天日。困顿至极。"},{"pos":2,"type":"九","text":"困于酒食，朱绂方来，利用享祀。征凶，无咎。","translation":"困于酒食之中（丰盛而无法享用），身穿朱红色丝带的官员即将到来。利于祭祀，征伐则凶，没有灾咎。困境中仍有转机。"},{"pos":3,"type":"六","text":"困于石，据于蒺藜，入于其宫，不见其妻，凶。","translation":"困于乱石之中，又攀在蒺藜之上。回到家中，见不到妻子，凶险。进退维谷，家室不保。"},{"pos":4,"type":"九","text":"来徐徐，困于金车，吝，有终。","translation":"缓缓而来，被困于华丽的囚车之中。虽有遗憾，但最终有好的结果。困中仍有希望。"},{"pos":5,"type":"九","text":"劓刖，困于赤绂，乃徐有说，利用祭祀。","translation":"遭受割鼻截足之刑，困于红色的丝带之中。但逐渐得以解脱，利于祭祀。极端困境中的转机。"},{"pos":6,"type":"六","text":"困于葛藟，于臲卼，曰动悔有悔，征吉。","translation":"被困于葛藟（藤蔓）之中，动弹不得。意识到行动便生悔恨，若能悔改则征伐吉祥。困极思变，痛定思痛。"}],"jijing":"凶中带吉","gua_ci_translation":"亨通，坚守正道。大人吉祥，没有灾咎。但此时说的话不能使人信服。困卦象征困境、穷厄。","xiang_ci_translation":"泽中无水，干涸之象。君子当据此不惜牺牲生命来践行自己的志向。"},{"id":48,"name":"井","full_name":"水风井","symbol":"䷯","upper":6,"lower":5,"gua_ci":"改邑不改井，无丧无得，往来井井。汔至，亦未繘井，羸其瓶，凶。","xiang_ci":"木上有水，井。君子以劳民劝相。","yaoci":[{"pos":1,"type":"六","text":"井泥不食，旧井无禽。","translation":"井中是泥沙，不能饮用。废弃的旧井连鸟兽都不来。井已废败，无人修治。"},{"pos":2,"type":"九","text":"井谷射鲋，瓮敝漏。","translation":"井底射鲋（小鱼），汲水的瓮又破又漏。井虽在却无法正常取用。"},{"pos":3,"type":"九","text":"井渫不食，为我心恻。可用汲，王明，并受其福。","translation":"井水已经淘洗干净却无人饮用，使我心中悲伤。这井水本来是可以汲用的，若君王明察，天下都能受此福泽。怀才不遇之叹。"},{"pos":4,"type":"六","text":"井甃，无咎。","translation":"用砖石修砌井壁，没有灾咎。修缮治理，使井恢复功用。"},{"pos":5,"type":"九","text":"井洌，寒泉食。","translation":"井水清澈，冰凉的泉水可以饮用。修治之功已成，惠泽于人。"},{"pos":6,"type":"六","text":"井收勿幕，有孚，元吉。","translation":"井水汲取完毕不加盖，任人取用。心怀诚信，大吉。井养万物而不穷竭，大公无私。"}],"jijing":"中","gua_ci_translation":"城邑可以迁移但水井不能移动，井水不增不减。来来往往的人都在井边取水。井水快要干涸时还没有淘洗水井，汲水的瓦罐也打翻了，凶险。井卦象征滋养、利民之源。","xiang_ci_translation":"木上有水（以木制井架汲水）。君子当据此劳苦为民、劝勉互助。"},{"id":49,"name":"革","full_name":"泽火革","symbol":"䷰","upper":2,"lower":3,"gua_ci":"已日乃孚。元亨利贞，悔亡。","xiang_ci":"泽中有火，革。君子以治历明时。","yaoci":[{"pos":1,"type":"九","text":"巩用黄牛之革。","translation":"用黄牛皮绳牢固地绑住。变革时机未到，须稳固现状以待天时。"},{"pos":2,"type":"六","text":"已日乃革之，征吉，无咎。","translation":"变革的时机已经到来，果断推行变革，前行吉祥，没有灾咎。顺势而为。"},{"pos":3,"type":"九","text":"征凶，贞厉。革言三就，有孚。","translation":"征伐则凶，坚守正道则危险。变革的言论须反复斟酌三遍，才能赢得信任。变革须慎重，反复论证。"},{"pos":4,"type":"九","text":"悔亡。有孚改命，吉。","translation":"悔恨消失。以诚信促成天命的变革，吉祥。革道已成。"},{"pos":5,"type":"九","text":"大人虎变，未占有孚。","translation":"大人如虎般变革，威猛有力。尚未占卜就已经赢得了信任。大人革心，天下信服。"},{"pos":6,"type":"九","text":"君子豹变，小人革面，征凶，居贞吉。","translation":"君子如豹般变革（文采斐然），小人只是改变了面色。征伐凶险，安居守正则吉祥。革面易、革心难。"}],"jijing":"吉","gua_ci_translation":"在转变的时机到来时赢得人们的信任。大为亨通，利于坚守正道，悔恨消失。革卦象征变革、革命。","xiang_ci_translation":"泽中有火，水火相息而变革。君子当据此修订历法、明确时令，顺应天时的变化。"},{"id":50,"name":"鼎","full_name":"火风鼎","symbol":"䷱","upper":3,"lower":5,"gua_ci":"元吉，亨。","xiang_ci":"木上有火，鼎。君子以正位凝命。","yaoci":[{"pos":1,"type":"六","text":"鼎颠趾，利出否，得妾以其子，无咎。","translation":"鼎倒过来足朝上，利于倾出废物。娶妾而得其子，没有灾咎。革故鼎新之初。"},{"pos":2,"type":"九","text":"鼎有实，我仇有疾，不我能即，吉。","translation":"鼎中盛满了食物。我的仇人有疾病，不能来接近我，吉祥。自身充实而排斥邪恶。"},{"pos":3,"type":"九","text":"鼎耳革，其行塞，雉膏不食，方雨亏悔，终吉。","translation":"鼎耳被改变，移动受阻。雉肉（美味）无法烹食，刚下起雨来就减少了遗憾，最终吉祥。变革中虽有不便，终归顺利。"},{"pos":4,"type":"九","text":"鼎折足，覆公餗，其形渥，凶。","translation":"鼎足折断，打翻了公侯的美食，沾满了一地，凶险。能力不足而担当大任，后果严重。"},{"pos":5,"type":"六","text":"鼎黄耳金铉，利贞。","translation":"鼎配上黄色的耳和金色的铉（提环），利于坚守正道。位居中道，担当重任。"},{"pos":6,"type":"九","text":"鼎玉铉，大吉，无不利。","translation":"鼎配上玉质的铉（提环），大吉，无处不利。至美至善之器。"}],"jijing":"上吉","gua_ci_translation":"大吉，亨通。鼎卦象征鼎器，引申为革新、养贤、立新政权。","xiang_ci_translation":"木上有火，以木生火烹煮食物。君子当据此端正自己的位置，凝聚天命。"},{"id":51,"name":"震","full_name":"震为雷","symbol":"䷲","upper":4,"lower":4,"gua_ci":"亨。震来虩虩，笑言哑哑，震惊百里，不丧匕鬯。","xiang_ci":"洊雷，震。君子以恐惧修省。","yaoci":[{"pos":1,"type":"六","text":"震来虩虩，后笑言哑哑，吉。","translation":"雷声袭来令人恐惧，随后谈笑自如，吉祥。因恐惧而修省，因修省而安然。"},{"pos":2,"type":"六","text":"震来厉，亿丧贝，跻于九陵，勿逐，七日得。","translation":"雷声来袭，有危险。惊恐中丢失了财物，攀登到九陵之上。不必追赶，七天之内会失而复得。"},{"pos":3,"type":"六","text":"震苏苏，震行无眚。","translation":"雷声令人惊惧不安。在雷声中前行，却没有灾祸。虽惧而能行。"},{"pos":4,"type":"九","text":"震遂泥。","translation":"雷声震动，陷入了泥泞之中。惊惧中未能振作。"},{"pos":5,"type":"六","text":"震往来厉，亿无丧，有事。","translation":"雷声往来震荡，有危险。没有丢失重要的东西，仍然可以照常办事。屡经震动而泰然处之。"},{"pos":6,"type":"六","text":"震索索，视矍矍，征凶。震不于其躬，于其邻，无咎。婚媾有言。","translation":"雷声令人索索发抖，目光闪烁不定。前行凶险。雷没有震到自己身上，而是震到了邻居，没有灾咎。婚事上有流言。惊惧中能安则吉。"}],"jijing":"中","gua_ci_translation":"亨通。雷声轰来令人恐惧，随后笑语安然。震惊百里之远，祭祀的酒勺没有洒落。震卦象征震动、敬畏，雷声令人警醒。","xiang_ci_translation":"雷声接踵而至。君子当据此心怀恐惧、修身反省。"},{"id":52,"name":"艮","full_name":"艮为山","symbol":"䷳","upper":7,"lower":7,"gua_ci":"艮其背，不获其身，行其庭，不见其人，无咎。","xiang_ci":"兼山，艮。君子以思不出其位。","yaoci":[{"pos":1,"type":"六","text":"艮其趾，无咎，利永贞。","translation":"止于脚趾，没有灾咎，利于长久坚守正道。防微杜渐，止于未萌。"},{"pos":2,"type":"六","text":"艮其腓，不拯其随，其心不快。","translation":"止于小腿，不能拯救被牵制的脚，心中不快。想行动却被制止，心中不甘。"},{"pos":3,"type":"九","text":"艮其限，列其夤，厉熏心。","translation":"止于腰部，将脊背的肌肉都撕裂了，危险得如同火烧内心。强行静止却牵连全身。"},{"pos":4,"type":"六","text":"艮其身，无咎。","translation":"止于自身，没有灾咎。安于本分，自我约束。"},{"pos":5,"type":"六","text":"艮其辅，言有序，悔亡。","translation":"止于面颊（口腔），说话有条有理，悔恨消失。谨言慎行。"},{"pos":6,"type":"九","text":"敦艮，吉。","translation":"以敦厚之心止于正道，吉祥。止之至善，如山之厚重。"}],"jijing":"中","gua_ci_translation":"止于背部，感觉不到身体的存在。走在庭院中，也看不见人。没有灾咎。艮卦象征止、静止，当止则止。","xiang_ci_translation":"两座山重叠，静止之极。君子当据此思考问题时不超出自己的本分和职责范围。"},{"id":53,"name":"渐","full_name":"风山渐","symbol":"䷴","upper":5,"lower":7,"gua_ci":"女归吉，利贞。","xiang_ci":"山上有木，渐。君子以居贤德善俗。","yaoci":[{"pos":1,"type":"六","text":"鸿渐于干，小子厉，有言，无咎。","translation":"鸿雁飞到水岸边。小鸿雁有危险，但虽有言语之争却没有灾咎。初步前进，虽有小波折但总体安全。"},{"pos":2,"type":"六","text":"鸿渐于磐，饮食衎衎，吉。","translation":"鸿雁飞到磐石之上，饮食快乐，吉祥。站稳了脚跟，安居乐业。"},{"pos":3,"type":"九","text":"鸿渐于陆，夫征不复，妇孕不育，凶。利御寇。","translation":"鸿雁飞到高平的陆地上，丈夫出征不回来，妻子怀孕却不能生育，凶险。但利于抵御外敌。冒进则失，守正则安。"},{"pos":4,"type":"六","text":"鸿渐于木，或得其桷，无咎。","translation":"鸿雁飞到树上，或许能找到平直的树枝栖息，没有灾咎。找到了适合自己的位置。"},{"pos":5,"type":"九","text":"鸿渐于陵，妇三岁不孕，终莫之胜，吉。","translation":"鸿雁飞到山陵之上，妇女三年不孕，但最终无人能取代，吉祥。坚持下去终有善果。"},{"pos":6,"type":"九","text":"鸿渐于阿，其羽可用为仪，吉。","translation":"鸿雁飞到高山之上，其羽毛可作为礼仪的装饰，吉祥。达到最高的境界，功德圆满。"}],"jijing":"吉","gua_ci_translation":"女子出嫁，吉祥，利于坚守正道。渐卦象征循序渐进，如鸿雁飞行般有次第。","xiang_ci_translation":"山上有树木，树木渐渐长高。君子当据此居于贤德之位，改善社会风俗。"},{"id":54,"name":"归妹","full_name":"雷泽归妹","symbol":"䷵","upper":4,"lower":2,"gua_ci":"征凶，无攸利。","xiang_ci":"泽上有雷，归妹。君子以永终知敝。","yaoci":[{"pos":1,"type":"九","text":"归妹以娣，跛能履，征吉。","translation":"以妾的身份出嫁（如同跛脚之人能走路），征伐则吉。居于从属地位反而可以成事。安守本分。"},{"pos":2,"type":"九","text":"眇能视，利幽人之贞。","translation":"一只眼失明却能看，利于幽居之人坚守正道。虽不完美，但守正仍有可为。"},{"pos":3,"type":"六","text":"归妹以须，反归以娣。","translation":"以妾的身份出嫁，等到时机不对又返回以妾的身份。进退失据，反复无常。"},{"pos":4,"type":"九","text":"归妹愆期，迟归有时。","translation":"出嫁错过了适婚的时机，迟嫁终有定期。好事不在急，等待有时。"},{"pos":5,"type":"六","text":"帝乙归妹，其君之袂，不如其娣之袂良。月几望，吉。","translation":"帝乙嫁妹，正室（君夫人）的衣袖反而不如妾的衣袖精美。月亮将近圆满之时，吉祥。以德不以貌。"},{"pos":6,"type":"六","text":"女承筐，无实。士刲羊，无血。无攸利。","translation":"女子捧着竹筐却没有实物，士人宰杀羊却没有出血。没有任何利益。有名无实，徒具形式。"}],"jijing":"凶","gua_ci_translation":"征伐则凶，没有任何利益。归妹卦象征少女出嫁、不当的结合。","xiang_ci_translation":"泽上有雷，泽随雷动。君子当据此洞悉事物有始有终的道理，防患于未然。"},{"id":55,"name":"丰","full_name":"雷火丰","symbol":"䷶","upper":4,"lower":3,"gua_ci":"亨，王假之。勿忧，宜日中。","xiang_ci":"雷电皆至，丰。君子以折狱致刑。","yaoci":[{"pos":1,"type":"九","text":"遇其配主，虽旬无咎，往有尚。","translation":"遇到与自己匹配的明主，虽然才德相当（十日之内），没有灾咎，前往会受推崇。"},{"pos":2,"type":"六","text":"丰其蔀，日中见斗，往得疑疾，有孚发若，吉。","translation":"遮蔽丰大之物，正午时能看到北斗星。前往会被人猜疑嫉妒，但以诚信感发则吉祥。光明被遮挡，但诚信可破暗。"},{"pos":3,"type":"九","text":"丰其沛，日中见沫，折其右肱，无咎。","translation":"遮蔽如帷幕，正午时只能看到小星。折断了右臂，没有灾咎。光明被严重遮挡，须承受损失。"},{"pos":4,"type":"九","text":"丰其蔀，日中见斗，遇其夷主，吉。","translation":"遮蔽丰大之物，正午时能看到北斗星。遇到与自己心意相投的明主，吉祥。终遇同道。"},{"pos":5,"type":"六","text":"来章，有庆誉，吉。","translation":"光明重现，有喜庆和赞誉，吉祥。乌云散去，阳光再现。"},{"pos":6,"type":"六","text":"丰其屋，蔀其家，窥其户，阒其无人，三岁不觌，凶。","translation":"丰盛的房屋被遮挡，家中被遮蔽。从门缝中窥视，空无一人，三年不见人影，凶险。丰盛到极反而空虚，极度封闭之象。"}],"jijing":"吉中带凶","gua_ci_translation":"亨通。君王亲临，不必忧虑，宜在正午时分行事。丰卦象征丰盛、盈满。","xiang_ci_translation":"雷电同时到来，声威俱盛。君子当据此公正断狱、慎用刑罚。"},{"id":56,"name":"旅","full_name":"火山旅","symbol":"䷷","upper":3,"lower":7,"gua_ci":"小亨，旅贞吉。","xiang_ci":"山上有火，旅。君子以明慎用刑，而不留狱。","yaoci":[{"pos":1,"type":"六","text":"旅琐琐，斯其所取灾。","translation":"旅途中吝啬小气、斤斤计较，这是自取灾祸之道。格局太小。"},{"pos":2,"type":"六","text":"旅即次，怀其资，得童仆，贞。","translation":"旅途中住在客栈，带着资财，找到了童仆侍奉，坚守正道。安顿得当。"},{"pos":3,"type":"九","text":"旅焚其次，丧其童仆，贞厉。","translation":"旅途中客栈被烧毁，失去了童仆，坚守也危险。居所不保，处境艰难。"},{"pos":4,"type":"九","text":"旅于处，得其资斧，我心不快。","translation":"旅途中找到居所，得到了资财和斧头，但心中仍然不快。虽有收获但心不安。"},{"pos":5,"type":"六","text":"射雉，一矢亡，终以誉命。","translation":"射中了一只雉鸡，丢失了一支箭，最终以声誉和使命补偿。有得有失，终获正果。"},{"pos":6,"type":"九","text":"鸟焚其巢，旅人先笑后号咷。丧牛于易，凶。","translation":"鸟巢被烧毁，旅人先笑后哭。在田间丢失了牛，凶险。乐极生悲，旅途终遇大祸。"}],"jijing":"凶中带吉","gua_ci_translation":"小有亨通，旅行中坚守正道则吉祥。旅卦象征旅途、客居他乡。","xiang_ci_translation":"山上有火，火势蔓延而不久留。君子当据此审慎用刑而不拖延案件，如旅人般不留滞。"},{"id":57,"name":"巽","full_name":"巽为风","symbol":"䷸","upper":5,"lower":5,"gua_ci":"小亨。利有攸往，利见大人。","xiang_ci":"随风，巽。君子以申命行事。","yaoci":[{"pos":1,"type":"六","text":"进退，利武人之贞。","translation":"进退不决，利于以武人的果断来坚守正道。过于优柔寡断，须以刚毅补之。"},{"pos":2,"type":"九","text":"巽在床下，用史巫纷若，吉，无咎。","translation":"像伏在床下一样顺从，用史巫纷繁地祈祷，吉祥，没有灾咎。过于谦卑但出于诚意。"},{"pos":3,"type":"九","text":"频巽，吝。","translation":"频频俯首顺从，遗憾。过度顺从失去了自我。"},{"pos":4,"type":"六","text":"悔亡，田获三品。","translation":"悔恨消失，田猎获得三种猎物。果断行动终有收获。"},{"pos":5,"type":"九","text":"贞吉，悔亡，无不利。无初有终。先庚三日，后庚三日，吉。","translation":"坚守正道则吉祥，悔恨消失，无处不利。起初不顺利但最终有好的结果。在庚日的前三天做准备，后三天收尾，吉祥。有始有终，谋定而后动。"},{"pos":6,"type":"九","text":"巽在床下，丧其资斧，贞凶。","translation":"像伏在床下一样顺从，丧失了资财和斧头，坚守也凶。过度顺从反而失去一切。"}],"jijing":"中吉","gua_ci_translation":"小有亨通。利于有所前往，利于面见大德之人。巽卦象征进入、顺从、风的无孔不入。","xiang_ci_translation":"风随着风，相继吹拂。君子当据此重申政令、推行政事。"},{"id":58,"name":"兑","full_name":"兑为泽","symbol":"䷹","upper":2,"lower":2,"gua_ci":"亨，利贞。","xiang_ci":"丽泽，兑。君子以朋友讲习。","yaoci":[{"pos":1,"type":"九","text":"和兑，吉。","translation":"以和悦的态度待人，吉祥。发自内心的喜悦。"},{"pos":2,"type":"九","text":"孚兑，吉，悔亡。","translation":"以诚信赢得喜悦，吉祥，悔恨消失。诚信是喜悦之本。"},{"pos":3,"type":"六","text":"来兑，凶。","translation":"刻意来寻求喜悦，凶险。虚伪的讨好终不得善果。"},{"pos":4,"type":"九","text":"商兑未宁，介疾有喜。","translation":"商议选择喜悦之道，心中尚未安宁。隔绝疾病则可获喜庆。择善而从。"},{"pos":5,"type":"九","text":"孚于剥，有厉。","translation":"信任于即将剥落之物，有危险。所悦非人，危险将至。"},{"pos":6,"type":"六","text":"引兑。","translation":"被牵引着产生喜悦。被动地随喜，缺乏自主判断。"}],"jijing":"吉","gua_ci_translation":"亨通，利于坚守正道。兑卦象征喜悦、泽的润泽。","xiang_ci_translation":"两泽相连，互相滋润。君子当据此与朋友讲学切磋，以学问相益。"},{"id":59,"name":"涣","full_name":"风水涣","symbol":"䷺","upper":5,"lower":6,"gua_ci":"亨。王假有庙，利涉大川，利贞。","xiang_ci":"风行水上，涣。先王以享于帝立庙。","yaoci":[{"pos":1,"type":"六","text":"用拯马壮，吉。","translation":"用强壮的马匹来拯救，吉祥。借助外力迅速化解危局。"},{"pos":2,"type":"九","text":"涣奔其机，悔亡。","translation":"涣散之时奔向安定的凭几（近臣之位），悔恨消失。找到可以依靠的地方。"},{"pos":3,"type":"六","text":"涣其躬，无悔。","translation":"涣散之及自身，但没有悔恨。自身能顺应涣散之势。"},{"pos":4,"type":"六","text":"涣其群，元吉。涣有丘，匪夷所思。","translation":"涣散了人群的隔阂，大吉。涣散聚集成丘陵，非平庸之人所能想象。化解群体间的隔阂，建立新的秩序。"},{"pos":5,"type":"九","text":"涣汗其大号，涣王居，无咎。","translation":"如汗水流淌般发出宏大号令，涣散君王的居所，没有灾咎。以号令凝聚涣散的人心。"},{"pos":6,"type":"九","text":"涣其血去，逖出，无咎。","translation":"涣散了流血的灾祸，远离了危险，没有灾咎。大患已解。"}],"jijing":"吉","gua_ci_translation":"亨通。君王来到宗庙，利于涉越大河，利于坚守正道。涣卦象征涣散、化解，消散隔阂。","xiang_ci_translation":"风行于水上，水面被吹散。先王据此祭祀上帝、建立宗庙，以凝聚人心。"},{"id":60,"name":"节","full_name":"水泽节","symbol":"䷻","upper":6,"lower":2,"gua_ci":"亨。苦节，不可贞。","xiang_ci":"泽上有水，节。君子以制数度，议德行。","yaoci":[{"pos":1,"type":"九","text":"不出户庭，无咎。","translation":"不出门庭，没有灾咎。在适当的时机节制自己。"},{"pos":2,"type":"九","text":"不出门庭，凶。","translation":"不出大门庭院，凶险。过度节制，闭门不出则错失时机。"},{"pos":3,"type":"六","text":"不节若，则嗟若，无咎。","translation":"不能节制，于是嗟叹后悔，但没有灾咎。失控之后才觉悟，尚可补救。"},{"pos":4,"type":"六","text":"安节，亨。","translation":"安于节制的状态，亨通。将节制化为自然而然的习惯。"},{"pos":5,"type":"九","text":"甘节，吉，往有尚。","translation":"甘心接受节制，吉祥，前往会受尊崇。以节制为乐，化约束为自觉。"},{"pos":6,"type":"六","text":"苦节，贞凶，悔亡。","translation":"以苦行的方式节制，坚守也凶，悔恨消失。过度节制反受其害，但能改过亦可。"}],"jijing":"中","gua_ci_translation":"亨通。但若过度节制则不可长久。节卦象征节制、适度。","xiang_ci_translation":"泽上有水，以堤防节制水流。君子当据此制定礼度法数、评议品德操行。"},{"id":61,"name":"中孚","full_name":"风泽中孚","symbol":"䷼","upper":5,"lower":2,"gua_ci":"豚鱼吉。利涉大川，利贞。","xiang_ci":"泽上有风，中孚。君子以议狱缓死。","yaoci":[{"pos":1,"type":"九","text":"虞吉，有它不燕。","translation":"安守诚信则吉祥，但有其他意外则会不得安宁。诚信专一则吉，三心二意则不安。"},{"pos":2,"type":"九","text":"鸣鹤在阴，其子和之。我有好爵，吾与尔靡之。","translation":"鸣叫的鹤在树荫中，其雏鸟应声相和。我有好酒，愿与你共享。真诚感通，远近呼应。"},{"pos":3,"type":"六","text":"得敌，或鼓或罢，或泣或歌。","translation":"遇到对手，或击鼓进攻、或收兵休息，或哭泣、或唱歌。心意不一，情绪反复。诚心不专则举止无常。"},{"pos":4,"type":"六","text":"月几望，马匹亡，无咎。","translation":"月亮将近圆满之时，跑掉了一匹马，没有灾咎。虽有小失但大体完好，诚信守正。"},{"pos":5,"type":"九","text":"有孚挛如，无咎。","translation":"以诚信凝聚众人，没有灾咎。诚信是团结的纽带。"},{"pos":6,"type":"九","text":"翰音登于天，贞凶。","translation":"鸟的鸣叫声传到了天上（虚声上扬），坚守也凶。名不副实，虚张声势之祸。"}],"jijing":"吉","gua_ci_translation":"豚鱼（一种不迁徙的诚信之鱼）也能感动，吉祥。利于涉越大河，利于坚守正道。中孚卦象征内心诚信、真诚感通。","xiang_ci_translation":"泽上有风，风吹过水面而感通万物。君子当据此审慎地处理狱讼案件，宽缓死刑。"},{"id":62,"name":"小过","full_name":"雷山小过","symbol":"䷽","upper":4,"lower":7,"gua_ci":"亨，利贞。可小事，不可大事。飞鸟遗之音，不宜上，宜下，大吉。","xiang_ci":"山上有雷，小过。君子以行过乎恭，丧过乎哀，用过乎俭。","yaoci":[{"pos":1,"type":"六","text":"飞鸟以凶。","translation":"飞鸟向上冲去，凶险。好高骛远必致坠落。"},{"pos":2,"type":"六","text":"过其祖，遇其妣。不及其君，遇其臣，无咎。","translation":"越过了祖父，遇到了祖母。没有赶上君王，遇到了臣子。没有灾咎。过于谦卑反而能获得尊重。"},{"pos":3,"type":"九","text":"弗过防之，从或戕之，凶。","translation":"没有过度防备，结果被别人伤害，凶险。防范不足则遭暗算。"},{"pos":4,"type":"九","text":"无咎，弗过遇之。往厉必戒，勿用永贞。","translation":"没有灾咎。没有过度而恰到好处地遇到了。前往有危险，必须警戒，不可长久坚守不变。适度而行。"},{"pos":5,"type":"六","text":"密云不雨，自我西郊。公弋取彼在穴。","translation":"密云布满天空却不降雨，从西郊飘来。公侯在洞穴中射取猎物。阴云凝聚不化，时机尚未成熟。"},{"pos":6,"type":"六","text":"弗遇过之，飞鸟离之，凶，是谓灾眚。","translation":"没有遇到就超过了，如同飞鸟被网罗所缠，凶险。这就是灾祸。不度时而动，自投罗网。"}],"jijing":"中吉","gua_ci_translation":"亨通，利于坚守正道。可以做小事，不可做大事。飞鸟留下的鸣叫声，不宜向上飞而宜向下飞，大吉。小过卦象征稍有过度，宜小不宜大。","xiang_ci_translation":"山上有雷，雷声在山中回响。君子当据此行为过于恭敬，丧事过于悲哀，花费过于节俭。"},{"id":63,"name":"既济","full_name":"水火既济","symbol":"䷾","upper":6,"lower":3,"gua_ci":"亨，小利贞。初吉，终乱。","xiang_ci":"水在火上，既济。君子以思患而预防之。","yaoci":[{"pos":1,"type":"九","text":"曳其轮，濡其尾，无咎。","translation":"拉住车轮，沾湿了车尾（谨慎前进），没有灾咎。成功之时仍须谨慎。"},{"pos":2,"type":"六","text":"妇丧其茀，勿逐，七日得。","translation":"妇人丢失了头饰，不必去追寻，七日之后会失而复得。小的损失不必挂怀。"},{"pos":3,"type":"九","text":"高宗伐鬼方，三年克之，小人勿用。","translation":"高宗讨伐鬼方之地，三年才攻克。不可任用小人。大事须持久，用人须谨慎。"},{"pos":4,"type":"六","text":"繻有衣袽，终日戒。","translation":"衣服破了但穿着丝绵衣来补，整天保持警惕。防患于未然。"},{"pos":5,"type":"九","text":"东邻杀牛，不如西邻之禴祭，实受其福。","translation":"东边的邻居杀牛祭礼，不如西边邻居的薄祭，反而实受福佑。重在诚心而非排场。"},{"pos":6,"type":"六","text":"濡其首，厉。","translation":"沾湿了头（灭顶之灾），危险。成功后的疏忽导致灾祸。"}],"jijing":"吉中带凶","gua_ci_translation":"亨通，小利于坚守正道。起初吉祥，最终混乱。既济卦象征已经完成、功业已成。","xiang_ci_translation":"水在火上，水火相交而烹饪成功。君子当据此思虑潜在的祸患而预先防备。"},{"id":64,"name":"未济","full_name":"火水未济","symbol":"䷿","upper":3,"lower":6,"gua_ci":"亨。小狐汔济，濡其尾，无攸利。","xiang_ci":"火在水上，未济。君子以慎辨物居方。","yaoci":[{"pos":1,"type":"六","text":"濡其尾，吝。","translation":"沾湿了尾巴，遗憾。刚开始就犯了错误。"},{"pos":2,"type":"九","text":"曳其轮，贞吉。","translation":"拉住车轮，坚守正道则吉祥。谨慎前进，不急不躁。"},{"pos":3,"type":"六","text":"未济，征凶。利涉大川。","translation":"尚未完成，征伐则凶。但利于涉越大河。事未竟但有大势可借。"},{"pos":4,"type":"九","text":"贞吉，悔亡。震用伐鬼方，三年有赏于大国。","translation":"坚守正道则吉祥，悔恨消失。以武力讨伐鬼方，三年之后获得大国的赏赐。坚持到底必获成功。"},{"pos":5,"type":"六","text":"贞吉，无悔。君子之光，有孚，吉。","translation":"坚守正道则吉祥，没有悔恨。君子的光辉，心怀诚信，吉祥。以明德服人。"},{"pos":6,"type":"九","text":"有孚于饮酒，无咎。濡其首，有孚失是。","translation":"心怀诚信地饮酒作乐，没有灾咎。但若醉酒淋湿了头，虽有诚信也失去了正道。乐极生悲。"}],"jijing":"中","gua_ci_translation":"亨通。小狐狸快要渡过河去时，沾湿了尾巴，没有任何利益。未济卦象征尚未完成、事未竟成。","xiang_ci_translation":"火在水上，水火不相交。君子当据此审慎辨别事物的性质，使之各得其所。"}]};
+const BL={1:[1,1,1],2:[1,1,0],3:[1,0,1],4:[1,0,0],5:[0,1,1],6:[0,1,0],7:[0,0,1],8:[0,0,0]};
+const BN={};for(const k in YJ.bagua)BN[k]=YJ.bagua[k].name;
+
+/* ===== Lunar Calendar ===== */
+const LI=[0x04bd8,0x04ae0,0x0a570,0x054d5,0x0d260,0x0d950,0x16554,0x056a0,0x09ad0,0x055d2,0x04ae0,0x0a5b6,0x0a4d0,0x0d250,0x1d255,0x0b540,0x0d6a0,0x0ada2,0x095b0,0x14977,0x04970,0x0a4b0,0x0b4b5,0x06a50,0x06d40,0x1ab54,0x02b60,0x09570,0x052f2,0x04970,0x06566,0x0d4a0,0x0ea50,0x06e95,0x05ad0,0x02b60,0x186e3,0x092e0,0x1c8d7,0x0c950,0x0d4a0,0x1d8a6,0x0b550,0x056a0,0x1a5b4,0x025d0,0x092d0,0x0d2b2,0x0a950,0x0b557,0x06ca0,0x0b550,0x15355,0x04da0,0x0a5b0,0x14573,0x052b0,0x0a9a8,0x0e950,0x06aa0,0x0aea6,0x0ab50,0x04b60,0x0aae4,0x0a570,0x05260,0x0f263,0x0d950,0x05b57,0x056a0,0x096d0,0x04dd5,0x04ad0,0x0a4d0,0x0d4d4,0x0d250,0x0d558,0x0b540,0x0b6a0,0x195a6,0x095b0,0x049b0,0x0a974,0x0a4b0,0x0b27a,0x06a50,0x06d40,0x0af46,0x0ab60,0x09570,0x04af5,0x04970,0x064b0,0x074a3,0x0ea50,0x06b58,0x05ac0,0x0ab60,0x096d5,0x092e0,0x0c960,0x0d954,0x0d4a0,0x0da50,0x07552,0x056a0,0x0abb7,0x025d0,0x092d0,0x0cab5,0x0a950,0x0b4a0,0x0baa4,0x0ad50,0x055d9,0x04ba0,0x0a5b0,0x15176,0x052b0,0x0a930,0x07954,0x06aa0,0x0ad50,0x05b52,0x04b60,0x0a6e6,0x0a4e0,0x0d260,0x0ea65,0x0d530,0x05aa0,0x076a3,0x096d0,0x04afb,0x04ad0,0x0a4d0,0x1d0b6,0x0d250,0x0d520,0x0dd45,0x0b5a0,0x056d0,0x055b2,0x049b0,0x0a577,0x0a4b0,0x0aa50,0x1b255,0x06d20,0x0ada0,0x14b63];
+function lYD(y){let s=348;for(let i=0x8000;i>0x8;i>>=1)s+=(LI[y-1900]&i)?1:0;return s+lD(y)}
+function lM(y){return LI[y-1900]&0xf}
+function lD(y){return lM(y)?((LI[y-1900]&0x10000)?30:29):0}
+function mD(y,m){return(LI[y-1900]&(0x10000>>m))?30:29}
+function s2l(Y,M,D){const b=new Date(1900,0,31),t=new Date(Y,M-1,D);let o=Math.floor((t-b)/86400000);let ly;for(ly=1900;ly<2101&&o>0;ly++)o-=lYD(ly);if(o<0){o+=lYD(--ly)}let il=false;const lp=lM(ly);for(lm=1;lm<13&&o>0;lm++){if(lp>0&&lm===lp+1&&!il){--lm;il=true;o-=lD(ly)}else{o-=mD(ly,lm)}if(il&&lm===lp+1)il=false}if(o===0&&lp>0&&lm===lp+1){if(il)il=false;else{il=true;--lm}}if(o<0){o+=mD(ly,--lm)}return{year:ly,month:lm,day:o+1,isLeap:il}}
+
+/* ===== Ganzhi ===== */
+const TG=['甲','乙','丙','丁','戊','己','庚','辛','壬','癸'];
+const DZ=['子','丑','寅','卯','辰','巳','午','未','申','酉','戌','亥'];
+const SX=['鼠','牛','虎','兔','龙','蛇','马','羊','猴','鸡','狗','猪'];
+function yGZ(ly){const t=(ly-4)%10,d=(ly-4)%12;return{gan:TG[t],zhi:DZ[d],ganIdx:t,zhiIdx:d,animal:SX[d]}}
+function mGZ(ly,lm){const tb=(ly-4)%10;return{gan:TG[(tb*2+lm)%10],zhi:DZ[(lm+1)%12],ganIdx:(tb*2+lm)%10,zhiIdx:(lm+1)%12}}
+function dGZ(dt){const r=new Date(1900,0,1),df=Math.floor((dt-r)/86400000),idx=((df+6)%60+60)%60;return{gan:TG[idx%10],zhi:DZ[idx%12],ganIdx:idx%10,zhiIdx:idx%12,idx}}
+function hZI(h){return(h+1)%12}
+function hGI(dgi,dzi){return(dgi%5*2+dzi)%10}
+
+/* ===== Meihua Divine ===== */
+function divine(dt){
+  const Y=dt.getFullYear(),M=dt.getMonth()+1,D=dt.getDate(),H=dt.getHours(),Min=dt.getMinutes();
+  const yd=String(Y).split('').map(Number).reduce((a,b)=>a+b,0);
+  const lu=s2l(Y,M,D);
+  const yg=yGZ(lu.year),mg=mGZ(lu.year,lu.month),dg=dGZ(dt);
+  const hi=hZI(H),hgi=hGI(dg.ganIdx,hi);
+  const s=yd+M+D+H, sM=s+Min;
+  const up=s%8||8, lo=sM%8||8, my=(sM%6)+1;
+  return{solar:{year:Y,month:M,day:D,hour:H,minute:Min},lunar:lu,ganzhi:{year:yg,month:mg,day:dg,hour:{gan:TG[hgi],zhi:DZ[hi],ganIdx:hgi,zhiIdx:hi}},upper:up,lower:lo,movingYao:my}
+}
+
+/* ===== Hexagram Logic ===== */
+const HX={};YJ.hexagrams.forEach(h=>HX[h.upper+'_'+h.lower]=h);
+function findGua(u,l){return HX[u+'_'+l]||null}
+function bianGua(g,my){
+  const ll=BL[g.lower],ul=BL[g.upper],lines=[...ll,...ul];
+  lines[my-1]=1-lines[my-1];
+  const nl=l2d(lines[0],lines[1],lines[2]),nu=l2d(lines[3],lines[4],lines[5]);
+  return findGua(nu,nl)
+}
+function l2d(a,b,c){const m={7:1,6:2,5:3,4:4,3:5,2:6,1:7,0:8};return m[a*4+b*2+c]}
+
+/* ===== SVG Hexagram ===== */
+function hexSVG(ud,ld,my,sz){
+  sz=sz||70;const lw=sz*.72,lh=5,g=sz*.24,sh=g*7+lh+4,sw=sz;
+  const ll=BL[ld],ul=BL[ud],al=[...ll,...ul];
+  let s=`<svg width="${sw}" height="${sh}" viewBox="0 0 ${sw} ${sh}" xmlns="http://www.w3.org/2000/svg">`;
+  for(let i=5;i>=0;i--){const y=g*(i+1)+2,yang=al[i]===1,mv=(i+1)===my,cl=mv?'var(--vermillion)':'var(--ink)',x0=(sw-lw)/2;
+    if(yang){s+=`<rect x="${x0}" y="${y}" width="${lw}" height="${lh}" rx="2" fill="${cl}"/>`}
+    else{const sw2=(lw-10)/2;s+=`<rect x="${x0}" y="${y}" width="${sw2}" height="${lh}" rx="2" fill="${cl}"/>`;s+=`<rect x="${x0+sw2+10}" y="${y}" width="${sw2}" height="${lh}" rx="2" fill="${cl}"/>`}
+    if(mv){s+=`<circle cx="${sw/2}" cy="${y+lh/2}" r="4" fill="var(--gold)" stroke="var(--gold-light)" stroke-width=".8"/>`}}
+  return s+'</svg>'
+}
+
+/* ===== Wuxing ===== */
+const WXC={'木':'wx-wood','火':'wx-fire','土':'wx-earth','金':'wx-metal','水':'wx-water'};
+function wt(n){return`<span class="wuxing-tag ${WXC[n]||''}">${n}</span>`}
+function wxA(g,gz){
+  const u=YJ.bagua[String(g.upper)],l=YJ.bagua[String(g.lower)];
+  const uw=u.wuxing,lw=l.wuxing;
+  const dwx=YJ.dizhi[gz.day.zhiIdx].wuxing,hwx=YJ.dizhi[gz.hour.zhiIdx].wuxing;
+  const sh=YJ.wuxing_sheng,ke=YJ.wuxing_ke;
+  let r=[];
+  r.push(`<p>上卦 <strong>${u.name}</strong>（${u.nature}）属${wt(uw)}，下卦 <strong>${l.name}</strong>（${l.nature}）属${wt(lw)}。</p>`);
+  if(uw===lw)r.push(`<p>上下同属${wt(uw)}，为<strong>比和</strong>，内外气通，平稳之局。</p>`);
+  else if(sh[uw]===lw)r.push(`<p>上${wt(uw)}生下${wt(lw)}，<strong>外生内</strong>，利外来之助。</p>`);
+  else if(sh[lw]===uw)r.push(`<p>下${wt(lw)}生上${wt(uw)}，<strong>内生外</strong>，气外泄，宜内守。</p>`);
+  else if(ke[uw]===lw)r.push(`<p>上${wt(uw)}克下${wt(lw)}，<strong>外克内</strong>，外有压力，宜谨慎。</p>`);
+  else if(ke[lw]===uw)r.push(`<p>下${wt(lw)}克上${wt(uw)}，<strong>内克外</strong>，内力可破局，有转机。</p>`);
+  r.push(`<p>日支${DZ[gz.day.zhiIdx]}属${wt(dwx)}，时支${DZ[gz.hour.zhiIdx]}属${wt(hwx)}。`);
+  if(sh[dwx]&&sh[dwx]===uw)r.push(`日${wt(dwx)}生卦上${wt(uw)}，得天时之助。`);
+  else if(ke[dwx]===uw)r.push(`日${wt(dwx)}克卦上${wt(uw)}，天时稍有压制。`);
+  r.push('</p>');
+  return r.join('')
+}
+
+function wuxingSVG(g){
+  const u=YJ.bagua[String(g.upper)].wuxing,l=YJ.bagua[String(g.lower)].wuxing;
+  const pos={木:0,火:1,土:2,金:3,水:4};
+  const cx=pos[u],cy=pos[l];
+  // Stars for generating cycle
+  const gen=['木→火','火→土','土→金','金→水','水→木'];
+  return`<svg viewBox="0 0 260 208" xmlns="http://www.w3.org/2000/svg">
+    <text x="130" y="14" text-anchor="middle" fill="#A89B8E" font-size="11" font-family="Noto Sans SC">五行相生关系</text>
+    ${['木','火','土','金','水'].map((wx,i)=>{
+      const a=i*72-90;const px=130+Math.cos(a*Math.PI/180)*55,py=95+Math.sin(a*Math.PI/180)*55;
+      const isU=wx===u,isL=wx===l;
+      const fill=isU?'var(--vermillion)':isL?'var(--gold)':'#888780';
+      return`<circle cx="${px}" cy="${py}" r="18" fill="${isU?'rgba(192,72,81,0.08)':isL?'rgba(184,134,11,0.08)':'transparent'}" stroke="${fill}" stroke-width="${isU||isL?1.5:.5}"/>
+      <text x="${px}" y="${py+4}" text-anchor="middle" fill="${fill}" font-size="13" font-family="Noto Serif SC" font-weight="500">${wx}</text>`
+    }).join('')}
+    ${gen.map((_,i)=>{
+      const a1=i*72-90,a2=(i+1)*72-90;
+      const x1=130+Math.cos(a1*Math.PI/180)*38,y1=95+Math.sin(a1*Math.PI/180)*38;
+      const x2=130+Math.cos(a2*Math.PI/180)*38,y2=95+Math.sin(a2*Math.PI/180)*38;
+      return`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#DDD5C8" stroke-width=".8"/>`
+    }).join('')}
+    <circle cx="130" cy="95" r="6" fill="none" stroke="var(--border)" stroke-width=".5"/>
+    <text x="130" y="98" text-anchor="middle" fill="#A89B8E" font-size="8" font-family="Noto Sans SC">相生</text>
+    <g transform="translate(0 180)" font-family="Noto Sans SC" font-size="10" fill="#A89B8E">
+      <circle cx="82" cy="0" r="4" fill="var(--vermillion)"/>
+      <text x="92" y="4">上卦</text>
+      <circle cx="142" cy="0" r="4" fill="var(--gold)"/>
+      <text x="152" y="4">下卦</text>
+    </g>
+  </svg>`
+}
+
+/* ===== Ganzhi Annotation ===== */
+function gzAnnotation(gz){
+  const dg=YJ.dizhi[gz.day.zhiIdx];
+  const hg=YJ.dizhi[gz.hour.zhiIdx];
+  const dayWX=dg.wuxing,hourWX=hg.wuxing;
+  let notes=[];
+  notes.push(`日主 ${gz.day.gan}${gz.day.zhi}，${gz.day.gan}属${YJ.tiangan[gz.day.ganIdx].wuxing}，日支${dg.wuxing}。`);
+  notes.push(`时柱 ${gz.hour.gan}${gz.hour.zhi}时（${dg.hour}），时支${hg.wuxing}。`);
+  return notes.join(' ')
+}
+
+/* ===== Build Result ===== */
+function buildResult(q,dv,options){
+  options=options||{};
+  const{solar,lunar,ganzhi,upper,lower,movingYao}=dv;
+  const mg=findGua(upper,lower);
+  const bg=bianGua(mg,movingYao);
+  const u=YJ.bagua[String(upper)],l=YJ.bagua[String(lower)];
+  const movingLine=mg.yaoci[movingYao-1]||{};
+  const category=options.category||'';
+  const isLoggedIn=!!localStorage.getItem('yj_token');
+
+  let h='';
+
+  h+=`<div class="result-intro">`;
+  h+=`<div class="result-kicker">所问</div>`;
+  if(category)h+=`<div class="result-category">${esc(category)}</div>`;
+  h+=`<div class="result-question">${esc(q)}</div>`;
+  h+=`</div>`;
+  h+=`<div class="result-disclaimer">卦象解读仅供娱乐参考，请勿作为现实决策依据。</div>`;
+
+  // --- AI Section (first!) ---
+  h+=`<div class="section ai-result-section" id="ai-section">`;
+  h+=`<div class="section-label">卦象解读</div>`;
+  if(options.mode==='history'){
+    h+=`<div class="ai-content" id="ai-output">${renderAIContent(options.aiResponse||'该记录暂无解卦内容')}</div>`;
+  } else if(isLoggedIn){
+    h+=`<div class="ai-loading" id="ai-output">正在推演卦象，请稍候……</div>`;
+  } else {
+    h+=`<div class="ai-configure-hint" id="ai-output">登录后可查看 AI 综合解读。<br><br><button class="btn-inline" onclick="showAuth('login')">立即登录</button><br><br>下方仍可查看完整的卦象原理信息，供自行分析。</div>`;
+  }
+  h+=`</div>`;
+
+  h+=`<nav class="result-nav" aria-label="结果模块导航">`;
+  h+=`<div class="result-nav-title">当前位置</div>`;
+  h+=`<div class="result-nav-list">`;
+  h+=`<button class="result-nav-link active" type="button" data-nav-target="ai-section">解读</button>`;
+  h+=`<button class="result-nav-link" type="button" data-nav-target="hex-section">现状</button>`;
+  h+=`<button class="result-nav-link" type="button" data-nav-target="moving-section">动爻</button>`;
+  h+=`<button class="result-nav-link" type="button" data-nav-target="trend-section">趋势</button>`;
+  h+=`<button class="result-nav-link" type="button" data-nav-target="classic-section">经文</button>`;
+  h+=`<button class="result-nav-link" type="button" data-nav-target="time-section">象数</button>`;
+  h+=`</div></nav>`;
+
+  h+=`<div class="reading-path">`;
+  h+=`<button class="path-step" type="button" data-nav-target="hex-section"><strong>1 本卦</strong>先看当下处境</button>`;
+  h+=`<button class="path-step" type="button" data-nav-target="moving-section"><strong>2 动爻</strong>再看变化焦点</button>`;
+  h+=`<button class="path-step" type="button" data-nav-target="trend-section"><strong>3 变卦</strong>判断后续趋势</button>`;
+  h+=`<button class="path-step" type="button" data-nav-target="classic-section"><strong>4 经文</strong>最后回看原文</button>`;
+  h+=`</div>`;
+
+  // --- Hexagram Display ---
+  h+=`<div class="section" id="hex-section">`;
+  h+=`<div class="section-label">1 本卦看现状</div>`;
+  h+=`<div class="guide-note"><strong>先看这一层：</strong>本卦代表问题的当前局面；右侧变卦代表动爻触发后的趋势。不了解易经时，先读卦名和译文，不必急着理解所有术语。</div>`;
+  h+=`<div class="hex-main">`;
+  h+=`<div class="hex-card"><div class="hex-svg">${hexSVG(mg.upper,mg.lower,movingYao,80)}</div>`;
+  h+=`<div class="hex-name">第${mg.id}卦 · ${mg.name}</div>`;
+  h+=`<div class="hex-full">${mg.full_name}</div>`;
+  h+=`<div class="hex-jijing">${mg.jijing}</div></div>`;
+  h+=`<div class="hex-change"><div class="hex-change-label">第${movingYao}爻动</div><div class="hex-change-arrow">→</div></div>`;
+  h+=`<div class="hex-card"><div class="hex-svg">${hexSVG(bg.upper,bg.lower,0,80)}</div>`;
+  h+=`<div class="hex-name">第${bg.id}卦 · ${bg.name}</div>`;
+  h+=`<div class="hex-full">${bg.full_name}</div><div class="hex-jijing placeholder">占位</div></div>`;
+  h+=`</div>`;
+  h+=`<div class="hex-caption">左为本卦（第${movingYao}爻动），右为变卦</div>`;
+  h+=`</div>`;
+
+  // --- Moving Yao with expandable full Yao text ---
+  h+=`<div class="section" id="moving-section">`;
+  h+=`<div class="section-label">2 动爻看变化</div>`;
+  h+=`<div class="guide-note"><strong>重点看动爻：</strong>六爻像一件事从起步到收束的六个阶段，本次第${movingYao}爻动，说明变化重点落在这一层。</div>`;
+  h+=`<div class="moving-yao-card">`;
+  h+=`<div class="moving-label">本次动爻 · ${movingLine.type||''}${pN(movingYao)}</div>`;
+  h+=`<div class="yao-text">${movingLine.text||''}`;
+  if(movingLine.translation) h+=`<div class="yao-translation">译：${movingLine.translation}</div>`;
+  h+=`</div></div>`;
+  h+=`<details class="learn-details"><summary>查看六爻原文与译文</summary><div class="learn-details-body"><div class="yao-list">`;
+  mg.yaoci.forEach(y=>{
+    const mv=y.pos===movingYao;
+    h+=`<div class="yao-item${mv?' is-moving':''}">`;
+    h+=`<div class="yao-pos">${y.type}${pN(y.pos)}${mv?' ○':''}</div>`;
+    h+=`<div class="yao-text">${y.text}`;
+    if(y.translation) h+=`<div class="yao-translation">译：${y.translation}</div>`;
+    h+=`</div></div>`;
+  });
+  h+=`</div></div></details></div>`;
+
+  // --- Bian Gua ---
+  h+=`<div class="section" id="trend-section">`;
+  h+=`<div class="section-label">3 变卦看趋势</div>`;
+  h+=`<div class="guide-note"><strong>再看变卦：</strong>变卦不是另起一卦，而是“当前局面继续变化后更可能呈现的方向”。</div>`;
+  h+=`<div class="text-block secondary">第${movingYao}爻动，由 <strong>${mg.name}</strong> 变为 <strong>${bg.name}</strong>（${bg.full_name}）<br>`;
+  h+=`<span class="original" style="display:block;margin-top:.3rem">${bg.gua_ci}</span>`;
+  if(bg.gua_ci_translation) h+=`<span class="translation">【译文】${bg.gua_ci_translation}</span>`;
+  h+=`</div></div>`;
+
+  // --- Gua Ci & Xiang Ci with translations ---
+  h+=`<div class="section" id="classic-section">`;
+  h+=`<div class="section-label">4 卦辞象辞作参考</div>`;
+  h+=`<div class="guide-note"><strong>最后读经文：</strong>卦辞看整件事的大方向，象辞看可借鉴的处世姿态；原文可作文化依据，译文更适合直接理解。</div>`;
+  h+=`<details class="learn-details" open><summary>查看本卦卦辞、象辞</summary><div class="learn-details-body">`;
+  h+=`<div class="text-block"><strong>${mg.full_name}</strong>：${mg.gua_ci}`;
+  if(mg.gua_ci_translation) h+=`<span class="translation">【译文】${mg.gua_ci_translation}</span></div>`;
+  else h+=`</div>`;
+  h+=`<div class="text-block secondary" style="margin-top:.6rem">大象：${mg.xiang_ci}`;
+  if(mg.xiang_ci_translation) h+=`<span class="translation">【译文】${mg.xiang_ci_translation}</span></div>`;
+  else h+=`</div>`;
+  h+=`</div></details></div>`;
+
+  // --- Time Seal + Wuxing + Attributes ---
+  h+=`<div class="section" id="time-section">`;
+  h+=`<div class="section-label">时空象数</div>`;
+  h+=`<div class="guide-note"><strong>进阶参考：</strong>这里用于解释起卦时间、五行和上下卦象意。新手可以先跳过，需要追溯推演依据时再展开看。</div>`;
+  h+=`<details class="learn-details"><summary>查看时空、五行与象意</summary><div class="learn-details-body">`;
+  h+=`<div class="time-insight"><div class="time-group"><div class="time-group-title">五柱时间摘要</div><div class="time-pillars">`;
+  // Vertical seal
+  h+=`<div class="time-seal"><div class="seal-label">时间</div>`;
+  h+=`<div class="seal-ganzhi">${solar.year}年${solar.month}月${solar.day}日</div></div>`;
+  h+=`<div class="time-seal"><div class="seal-label">年柱</div>`;
+  h+=`<div class="seal-ganzhi">${lunar.year}${ganzhi.year.gan}${ganzhi.year.zhi}</div></div>`;
+  h+=`<div class="time-seal"><div class="seal-label">月柱</div>`;
+  h+=`<div class="seal-ganzhi">${ganzhi.month.gan}${ganzhi.month.zhi}</div></div>`;
+  h+=`<div class="time-seal"><div class="seal-label">日柱</div>`;
+  h+=`<div class="seal-ganzhi">${ganzhi.day.gan}${ganzhi.day.zhi}</div></div>`;
+  h+=`<div class="time-seal"><div class="seal-label">时柱</div>`;
+  h+=`<div class="seal-ganzhi">${ganzhi.hour.gan}${ganzhi.hour.zhi}</div></div>`;
+  // Right info
+  h+=`</div></div><div class="time-group"><div class="time-group-title">干支与上下卦象意</div><div class="seal-detail">`;
+  h+=`<div class="seal-note"><div class="il">干支批注</div><div class="iv">${gzAnnotation(ganzhi)}</div></div>`;
+  h+=`<div class="trigram-grid">`;
+  h+=`<div class="trigram-card"><div class="trigram-title">上卦 · ${u.name}</div><div class="trigram-meta">`;
+  h+=`<span><b>方位</b>${u.direction}</span><span><b>色象</b>${u.color.join('、')}</span><span><b>物象</b>${u.objects.slice(0,4).join('、')}</span><span><b>季节</b>${u.season}</span>`;
+  h+=`</div></div>`;
+  h+=`<div class="trigram-card"><div class="trigram-title">下卦 · ${l.name}</div><div class="trigram-meta">`;
+  h+=`<span><b>方位</b>${l.direction}</span><span><b>色象</b>${l.color.join('、')}</span><span><b>物象</b>${l.objects.slice(0,4).join('、')}</span><span><b>季节</b>${l.season}</span>`;
+  h+=`</div></div></div>`;
+  h+=`</div></div>`;
+  // Wuxing diagram + analysis
+  h+=`<div class="time-group"><div class="time-group-title">五行关系</div><div class="wuxing-panel">`;
+  h+=`<div class="wuxing-diagram">${wuxingSVG(mg)}</div>`;
+  h+=`<div class="wuxing-result">${wxA(mg,ganzhi)}</div>`;
+  h+=`</div></div></div></details></div>`;
+
+  h+=`<button class="btn-redo" onclick="resetApp()">重新起卦</button>`;
+
+  const qForAI=category?`【分类：${category}】${q}`:q;
+  return{html:h,mg,bg,my:movingYao,dv,q:qForAI,displayQuestion:q,category}
+}
+
+/* ===== Backend Config ===== */
+// 开发环境：本地后端地址。部署时改为实际域名。
+const CLOUD_BACKEND_URL = 'https://www.qfeng.cloud';
+function resolveBackendUrl(){
+  if(typeof window.YJ_BACKEND_URL !== 'undefined') return window.YJ_BACKEND_URL;
+  const apiParam=new URLSearchParams(location.search).get('api');
+  if(apiParam){localStorage.setItem('yj_backend_url',apiParam);return apiParam.replace(/\/+$/,'')}
+  const savedApi=localStorage.getItem('yj_backend_url');
+  if(savedApi) return savedApi.replace(/\/+$/,'');
+  const h=location.hostname;
+  if(location.protocol==='file:'||h==='localhost'||h==='127.0.0.1'||h==='[::1]') return CLOUD_BACKEND_URL;
+  return '';
+}
+const BACKEND_URL = resolveBackendUrl();
+
+async function readJsonResponse(res){
+  const contentType=res.headers.get('content-type')||'';
+  if(contentType.includes('application/json')) return await res.json();
+  const text=await res.text();
+  const preview=text.trim().slice(0,80);
+  throw new Error('接口没有返回 JSON，请检查 API 地址：'+(BACKEND_URL||location.origin)+'。返回内容：'+preview);
+}
+
+/* ===== AI Call (via Backend) ===== */
+async function callAI(q,mg,bg,my,dv){
+  const token=localStorage.getItem('yj_token');
+  if(!token)return;
+  const el=document.getElementById('ai-output');
+  el.className='ai-loading';
+  el.textContent='正在推演卦象，请稍候……';
+
+  const{ganzhi:gz,solar}=dv;
+  const u=YJ.bagua[String(mg.upper)],l=YJ.bagua[String(mg.lower)];
+
+  const hexagramData={
+    solar:solar,
+    lunar:dv.lunar,
+    ganzhi:{year:{gan:gz.year.gan,zhi:gz.year.zhi},month:{gan:gz.month.gan,zhi:gz.month.zhi},day:{gan:gz.day.gan,zhi:gz.day.zhi,ganIdx:gz.day.ganIdx,zhiIdx:gz.day.zhiIdx},hour:{gan:gz.hour.gan,zhi:gz.hour.zhi,ganIdx:gz.hour.ganIdx,zhiIdx:gz.hour.zhiIdx}},
+    upper:dv.upper, lower:dv.lower, movingYao:my,
+    benGua:{id:mg.id,name:mg.name,full_name:mg.full_name,jijing:mg.jijing,gua_ci:mg.gua_ci,gua_ci_translation:mg.gua_ci_translation,xiang_ci:mg.xiang_ci,xiang_ci_translation:mg.xiang_ci_translation,yaoci:mg.yaoci,
+      upper_name:u.name,upper_nature:u.nature,upper_wuxing:u.wuxing,
+      lower_name:l.name,lower_nature:l.nature,lower_wuxing:l.wuxing},
+    bianGua:{id:bg.id,name:bg.name,full_name:bg.full_name,gua_ci:bg.gua_ci,gua_ci_translation:bg.gua_ci_translation}
+  };
+
+  const controller=new AbortController();
+  const timeoutId=setTimeout(()=>controller.abort(),95000);
+  try{
+    const res=await fetch(BACKEND_URL+'/api/divine',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
+      body:JSON.stringify({question:q,hexagram_data:hexagramData}),
+      signal:controller.signal
+    });
+    let data={};
+    try{data=await res.json()}catch(_){}
+    if(res.status===401){
+      doLogout();
+      el.className='ai-configure-hint';
+      el.innerHTML='登录已过期，请重新登录。<br><br><button class="btn-inline" onclick="showAuth(\'login\')">重新登录</button>';
+      return;
+    }
+    if(res.status===403){
+      el.className='ai-error';el.textContent=data.error||'今日 AI 解读次数已用完。';
+      return;
+    }
+    if(res.status===504){
+      el.className='ai-error';el.textContent=data.error||'AI 服务响应超时，请稍后重试。';
+      return;
+    }
+    if(res.status===502){
+      el.className='ai-error';el.textContent=data.error||'AI 服务调用失败，请稍后重试。';
+      return;
+    }
+    if(!res.ok)throw new Error(data.error||'服务异常 ('+res.status+')');
+    el.className='ai-content';el.innerHTML=renderAIContent(data.ai_response||'');
+    if(data.remaining!=null)updateQuota(data.remaining);
+  }catch(e){
+    el.className='ai-error';
+    el.textContent=e.name==='AbortError'?'AI 服务响应超时，请稍后重试。':'AI 调用失败：'+e.message;
+  }finally{
+    clearTimeout(timeoutId);
+  }
+}
+
+/* ===== UI Controller ===== */
+let cur=null;
+let resultNavObserver=null;
+const RESULT_SECTION_IDS=['ai-section','hex-section','moving-section','trend-section','classic-section','time-section'];
+
+function clearResultNavigation(){
+  if(resultNavObserver){resultNavObserver.disconnect();resultNavObserver=null}
+}
+
+function setActiveResultSection(id){
+  document.querySelectorAll('[data-nav-target]').forEach(el=>{
+    el.classList.toggle('active',el.dataset.navTarget===id);
+  });
+}
+
+function resultScrollOffset(){
+  const nav=document.querySelector('.result-nav');
+  if(nav&&getComputedStyle(nav).position==='sticky')return nav.offsetHeight+16;
+  return 88;
+}
+
+function scrollToResultSection(id){
+  const target=document.getElementById(id);
+  if(!target)return;
+  const top=target.getBoundingClientRect().top+window.pageYOffset-resultScrollOffset();
+  window.scrollTo({top:Math.max(0,top),behavior:'smooth'});
+  setActiveResultSection(id);
+}
+
+function initResultNavigation(){
+  clearResultNavigation();
+  const rs=document.getElementById('result-state');
+  if(!rs)return;
+  rs.querySelectorAll('[data-nav-target]').forEach(el=>{
+    el.addEventListener('click',()=>scrollToResultSection(el.dataset.navTarget));
+  });
+  const sections=RESULT_SECTION_IDS.map(id=>document.getElementById(id)).filter(Boolean);
+  if(!sections.length)return;
+  setActiveResultSection(sections[0].id);
+  if('IntersectionObserver' in window){
+    resultNavObserver=new IntersectionObserver(entries=>{
+      const visible=entries.filter(e=>e.isIntersecting).sort((a,b)=>b.intersectionRatio-a.intersectionRatio);
+      if(visible[0])setActiveResultSection(visible[0].target.id);
+    },{rootMargin:'-24% 0px -58% 0px',threshold:[0,.25,.5,.75]});
+    sections.forEach(s=>resultNavObserver.observe(s));
+  }
+}
+
+function getSelectedCategory(){
+  const active=document.querySelector('.category-chip.active');
+  return active?active.dataset.category||'其他':'其他';
+}
+
+document.querySelectorAll('.category-chip').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.category-chip').forEach(x=>{
+      const on=x===btn;
+      x.classList.toggle('active',on);
+      x.setAttribute('aria-checked',on?'true':'false');
+    });
+  });
+});
+
+function startDivine(){
+  const q=document.getElementById('question-input').value.trim();
+  if(!q){document.getElementById('question-input').focus();return}
+  document.getElementById('btn-divine').disabled=true;
+  const now=new Date(),dv=divine(now);
+  cur=buildResult(q,dv,{category:getSelectedCategory()});
+
+  // Show loading animation
+  const inp=document.getElementById('input-state');
+  const ld=document.getElementById('loading-state');
+  inp.style.display='none';
+  ld.classList.add('show');
+
+  // Build loading hexagram lines
+  const hexEl=document.getElementById('loading-hex');
+  hexEl.innerHTML='';
+  const mg=findGua(dv.upper,dv.lower);
+  const ll=BL[mg.lower],ul=BL[mg.upper],al=[...ll,...ul];
+  for(let i=5;i>=0;i--){
+    const div=document.createElement('div');
+    div.className='loading-yao'+(al[i]?' yang':' yin');
+    if(i+1===dv.movingYao)div.classList.add('moving');
+    div.style.bottom=(10+i*30)+'px';
+    hexEl.appendChild(div);
+  }
+
+  // Animate lines appearing one by one
+  const lines=hexEl.querySelectorAll('.loading-yao');
+  lines.forEach((ln,i)=>{
+    setTimeout(()=>ln.classList.add('visible'),200+i*250);
+  });
+
+  // Show text after lines
+  setTimeout(()=>document.getElementById('loading-text').classList.add('show'),200+6*250+100);
+
+  // Transition to result
+  setTimeout(()=>{
+    ld.classList.remove('show');
+    const rs=document.getElementById('result-state');
+    rs.style.display='';
+    rs.innerHTML=cur.html;
+    rs.classList.add('show');
+    initResultNavigation();
+    window.scrollTo({top:0,behavior:'smooth'});
+
+    // Auto-call AI if logged in
+    if(localStorage.getItem('yj_token')) callAI(cur.q,cur.mg,cur.bg,cur.my,cur.dv);
+  },200+6*250+800);
+}
+
+function resetApp(){
+  const rs=document.getElementById('result-state'),inp=document.getElementById('input-state');
+  clearResultNavigation();
+  rs.classList.remove('show');
+  setTimeout(()=>{
+    rs.style.display='';rs.innerHTML='';rs.className='';
+    inp.style.display='flex';
+    inp.offsetHeight;
+    inp.classList.remove('fade-out');
+    document.getElementById('btn-divine').disabled=false;
+    document.getElementById('loading-text').classList.remove('show');
+    cur=null;
+  },300);
+}
+
+/* ===== Auth ===== */
+let currentUser=null;
+
+function showAuth(tab){
+  document.getElementById('auth-overlay').classList.add('open');
+  document.getElementById('auth-error').textContent='';
+  document.getElementById('auth-success').textContent='';
+  switchAuthTab(tab||'login');
+}
+function closeAuth(){document.getElementById('auth-overlay').classList.remove('open')}
+function switchAuthTab(tab){
+  document.querySelectorAll('.auth-tab').forEach(t=>t.classList.toggle('active',t.dataset.tab===tab));
+  document.getElementById('form-login').classList.toggle('active',tab==='login');
+  document.getElementById('form-register').classList.toggle('active',tab==='register');
+  document.getElementById('auth-error').textContent='';
+  document.getElementById('auth-success').textContent='';
+}
+document.getElementById('auth-overlay').addEventListener('click',function(e){if(e.target===this)closeAuth()});
+
+async function doLogin(e){
+  e.preventDefault();
+  const username=document.getElementById('login-user').value.trim();
+  const password=document.getElementById('login-pass').value;
+  if(!username||!password)return;
+  document.getElementById('auth-error').textContent='';
+  try{
+    const res=await fetch(BACKEND_URL+'/api/auth/login',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({username,password})
+    });
+    const data=await readJsonResponse(res);
+    if(!res.ok){document.getElementById('auth-error').textContent=data.error||'登录失败';return}
+    localStorage.setItem('yj_token',data.token);
+    currentUser=data.user;
+    onLogin();
+    closeAuth();
+  }catch(err){document.getElementById('auth-error').textContent='网络错误：'+err.message}
+}
+
+async function doRegister(e){
+  e.preventDefault();
+  const username=document.getElementById('reg-user').value.trim();
+  const password=document.getElementById('reg-pass').value;
+  if(!username||!password)return;
+  document.getElementById('auth-error').textContent='';
+  try{
+    const res=await fetch(BACKEND_URL+'/api/auth/register',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({username,password})
+    });
+    const data=await readJsonResponse(res);
+    if(!res.ok){document.getElementById('auth-error').textContent=data.error||'注册失败';return}
+    localStorage.setItem('yj_token',data.token);
+    currentUser=data.user;
+    onLogin();
+    closeAuth();
+  }catch(err){document.getElementById('auth-error').textContent='网络错误：'+err.message}
+}
+
+function doLogout(){
+  localStorage.removeItem('yj_token');
+  currentUser=null;
+  document.getElementById('btn-login').style.display='';
+  document.getElementById('user-info').style.display='none';
+  document.getElementById('btn-history').style.display='none';
+  document.getElementById('uname').textContent='';
+  document.getElementById('quota').textContent='';
+}
+
+function onLogin(){
+  document.getElementById('btn-login').style.display='none';
+  document.getElementById('user-info').style.display='flex';
+  document.getElementById('btn-history').style.display='';
+  document.getElementById('uname').textContent=currentUser.username;
+  // Fetch user info for quota
+  fetchUserInfo();
+}
+
+async function fetchUserInfo(){
+  const token=localStorage.getItem('yj_token');
+  if(!token)return;
+  try{
+    const res=await fetch(BACKEND_URL+'/api/user/info',{headers:{'Authorization':'Bearer '+token}});
+    if(!res.ok){if(res.status===401)doLogout();return}
+    const data=await readJsonResponse(res);
+    if(data.remaining!=null)updateQuota(data.remaining);
+  }catch(e){}
+}
+
+function updateQuota(remaining){
+  currentUser={...currentUser,_remaining:remaining};
+  document.getElementById('quota').textContent='剩余'+remaining+'次';
+}
+
+// Auto-login on page load
+(function(){
+  const token=localStorage.getItem('yj_token');
+  if(!token)return;
+  // Try to get user info; if fails, clear token
+  fetchUserInfo();
+  // Show logged-in UI optimistically
+  document.getElementById('btn-login').style.display='none';
+  document.getElementById('user-info').style.display='flex';
+  document.getElementById('btn-history').style.display='';
+  // Decode username from JWT payload (base64)
+  try{
+    const payload=JSON.parse(atob(token.split('.')[1]));
+    document.getElementById('uname').textContent=payload.username||'';
+    currentUser={id:payload.user_id,username:payload.username};
+  }catch(e){}
+})();
+
+/* ===== History ===== */
+function toggleHistory(){
+  const sb=document.getElementById('history-sidebar');
+  const ov=document.getElementById('history-overlay');
+  const isOpen=sb.classList.contains('open');
+  if(isOpen){sb.classList.remove('open');ov.classList.remove('open');showHistoryList(false)}
+  else{sb.classList.add('open');ov.classList.add('open');showHistoryList(false);loadHistory()}
+}
+
+async function loadHistory(){
+  const token=localStorage.getItem('yj_token');
+  const listEl=document.getElementById('history-list');
+  const detailEl=document.getElementById('history-detail');
+  listEl.style.display='block';
+  detailEl.classList.remove('open');
+  if(!token){listEl.innerHTML='<div class="history-empty">请先登录</div>';return}
+  listEl.innerHTML='<div class="history-empty">加载中……</div>';
+  try{
+    const res=await fetch(BACKEND_URL+'/api/history?page=1&page_size=20',{headers:{'Authorization':'Bearer '+token}});
+    if(res.status===401){doLogout();listEl.innerHTML='<div class="history-empty">登录已过期，请重新登录</div>';return}
+    if(!res.ok){listEl.innerHTML='<div class="history-empty">加载失败</div>';return}
+    const data=await readJsonResponse(res);
+    if(!data.records||!data.records.length){listEl.innerHTML='<div class="history-empty">暂无记录</div>';return}
+    listEl.innerHTML=data.records.map(r=>{
+      const t=r.created_at?new Date(r.created_at).toLocaleString('zh-CN',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}):'';
+      const q=r.question||'';
+      return`<div class="history-item" onclick="openHistoryDetail(${Number(r.id)})">
+        <div class="hi-question" title="${esc(q)}">${esc(q)}</div>
+        <div class="hi-meta">${t}</div>
+      </div>`;
+    }).join('');
+  }catch(e){listEl.innerHTML='<div class="history-empty">加载失败</div>'}
+}
+
+function showHistoryList(reload){
+  const listEl=document.getElementById('history-list');
+  const detailEl=document.getElementById('history-detail');
+  detailEl.classList.remove('open');
+  detailEl.innerHTML='';
+  listEl.style.display='block';
+  if(reload)loadHistory();
+}
+
+function buildDvFromHistory(record){
+  const hd=record.hexagram_data||{};
+  const gz=hd.ganzhi||{};
+  const now=new Date(record.created_at||Date.now());
+  const fallback=divine(now);
+  const blankGz={gan:'',zhi:'',ganIdx:0,zhiIdx:0};
+  return {
+    solar:hd.solar||fallback.solar,
+    lunar:hd.lunar||fallback.lunar,
+    ganzhi:{
+      year:Object.assign({},blankGz,gz.year||fallback.ganzhi.year||{}),
+      month:Object.assign({},blankGz,gz.month||fallback.ganzhi.month||{}),
+      day:Object.assign({},blankGz,gz.day||fallback.ganzhi.day||{}),
+      hour:Object.assign({},blankGz,gz.hour||fallback.ganzhi.hour||{})
+    },
+    upper:hd.upper||fallback.upper,
+    lower:hd.lower||fallback.lower,
+    movingYao:hd.movingYao||fallback.movingYao
+  };
+}
+
+function closeHistoryPanel(){
+  document.getElementById('history-sidebar').classList.remove('open');
+  document.getElementById('history-overlay').classList.remove('open');
+  showHistoryList(false);
+}
+
+function showHistoryResult(record){
+  const dv=buildDvFromHistory(record);
+  cur=buildResult(record.question||'',dv,{mode:'history',aiResponse:record.ai_response||'该记录暂无解卦内容'});
+  closeHistoryPanel();
+  document.getElementById('input-state').style.display='none';
+  document.getElementById('loading-state').classList.remove('show');
+  const rs=document.getElementById('result-state');
+  rs.innerHTML=cur.html;
+  rs.className='show';
+  initResultNavigation();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+async function openHistoryDetail(id){
+  const token=localStorage.getItem('yj_token');
+  const listEl=document.getElementById('history-list');
+  const detailEl=document.getElementById('history-detail');
+  if(!token){detailEl.innerHTML='<div class="history-empty">请先登录</div>';return}
+  listEl.style.display='none';
+  detailEl.classList.add('open');
+  detailEl.innerHTML='<button class="history-back" onclick="showHistoryList(false)">‹ 返回记录</button><div class="history-empty">加载中……</div>';
+  try{
+    const res=await fetch(BACKEND_URL+'/api/history/'+id,{headers:{'Authorization':'Bearer '+token}});
+    if(res.status===401){doLogout();detailEl.innerHTML='<button class="history-back" onclick="showHistoryList(true)">‹ 返回记录</button><div class="history-empty">登录已过期，请重新登录</div>';return}
+    if(!res.ok){detailEl.innerHTML='<button class="history-back" onclick="showHistoryList(true)">‹ 返回记录</button><div class="history-empty">加载失败</div>';return}
+    const record=await readJsonResponse(res);
+    showHistoryResult(record);
+  }catch(e){
+    detailEl.innerHTML='<button class="history-back" onclick="showHistoryList(true)">‹ 返回记录</button><div class="history-empty">加载失败</div>';
+  }
+}
+
+/* ===== Utilities ===== */
+function pN(p){return['','初','二','三','四','五','上'][p]}
+function esc(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML}
+function renderAIInline(s){
+  return esc(s).replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>');
+}
+function renderAIContent(markdown){
+  const lines=String(markdown||'').replace(/\r\n?/g,'\n').split('\n');
+  const out=[];
+  let para=[],list=null,summary=[];
+  const flushPara=()=>{
+    if(!para.length)return;
+    out.push('<p>'+renderAIInline(para.join(' '))+'</p>');
+    para=[];
+  };
+  const flushList=()=>{
+    if(!list)return;
+    out.push('<'+list.type+'>'+list.items.map(x=>'<li>'+renderAIInline(x)+'</li>').join('')+'</'+list.type+'>');
+    list=null;
+  };
+  const flushSummary=()=>{
+    if(!summary.length)return;
+    out.push('<div class="ai-summary-grid">'+summary.map(item=>
+      '<div class="ai-summary-card"><div class="summary-label">'+renderAIInline(item.label)+'</div><div class="summary-text">'+renderAIInline(item.text)+'</div></div>'
+    ).join('')+'</div>');
+    summary=[];
+  };
+  const pushList=(type,text)=>{
+    flushPara();flushSummary();
+    if(!list||list.type!==type)flushList(),list={type,items:[]};
+    list.items.push(text);
+  };
+  lines.forEach(raw=>{
+    const line=raw.trim();
+    if(!line){flushPara();flushList();flushSummary();return}
+    let m=line.match(/^(#{1,3})\s+(.+)$/);
+    if(m){flushPara();flushList();flushSummary();out.push('<h3>'+renderAIInline(m[2])+'</h3>');return}
+    m=line.match(/^(决策摘要|明确建议|卦象依据|动爻变化|动爻与变卦|时势补充|五行时势)[：:]\s*$/);
+    if(m){flushPara();flushList();flushSummary();out.push('<h3>'+renderAIInline(m[1])+'</h3>');return}
+    m=line.match(/^(当前态势|关键阻力|建议动作)[：:]\s*(.+)$/);
+    if(m){flushPara();flushList();summary.push({label:m[1],text:m[2]});return}
+    m=line.match(/^(留意项|小提示|风险提示)[：:]\s*(.+)$/);
+    if(m){flushPara();flushList();flushSummary();out.push('<div class="ai-callout"><span class="callout-label">'+renderAIInline(m[1])+'</span>'+renderAIInline(m[2])+'</div>');return}
+    m=line.match(/^[-*]\s+(.+)$/);
+    if(m){pushList('ul',m[1]);return}
+    m=line.match(/^\d+[.)]\s+(.+)$/);
+    if(m){pushList('ol',m[1]);return}
+    flushList();flushSummary();
+    para.push(line);
+  });
+  flushPara();flushList();flushSummary();
+  return out.join('');
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,5 @@
+#!/bin/bash
+# SCF Web Function Bootstrap for Python 3.9 Flask
+# 启动 Flask 应用，监听 9000 端口
+
+/var/lang/python3/bin/python3 -u scf_handler.py

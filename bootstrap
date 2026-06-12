@@ -1,0 +1,5 @@
+#!/bin/bash
+# SCF Custom Runtime Bootstrap for Python Flask
+export PYTHONPATH=/opt:/opt/python
+cd /opt
+python scf_handler.py

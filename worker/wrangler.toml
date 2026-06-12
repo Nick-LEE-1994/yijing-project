@@ -1,0 +1,26 @@
+name = "yijing-d1-api"
+main = "src/index.js"
+compatibility_date = "2026-06-11"
+workers_dev = true
+routes = [
+  { pattern = "qfeng.cloud/api/*", zone_name = "qfeng.cloud" },
+  { pattern = "www.qfeng.cloud/api/*", zone_name = "qfeng.cloud" },
+]
+
+[vars]
+DEEPSEEK_BASE_URL = "https://api.deepseek.com"
+DEEPSEEK_MODEL = "deepseek-v4-flash"
+JWT_EXPIRES_DAYS = "7"
+DAILY_AI_LIMIT = "10"
+BUILD_VERSION = "cloudflare-d1-20260611"
+CORS_ORIGINS = "https://www.qfeng.cloud,https://qfeng.cloud,http://localhost:8081,http://localhost:8787"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "yijing-project"
+database_id = "c783e018-44f0-43d6-8b99-5ea17f201372"
+
+# Optional KV binding for future cache/reset-token use. D1 remains the source of truth.
+# [[kv_namespaces]]
+# binding = "CACHE"
+# id = "replace-with-your-kv-namespace-id"
