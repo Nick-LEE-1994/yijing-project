@@ -13,7 +13,7 @@ DEEPSEEK_MODEL = "deepseek-v4-flash"
 JWT_EXPIRES_DAYS = "7"
 DAILY_AI_LIMIT = "10"
 BUILD_VERSION = "cloudflare-d1-20260611"
-CORS_ORIGINS = "https://www.qfeng.cloud,https://qfeng.cloud,http://localhost:8081,http://localhost:8787"
+CORS_ORIGINS = "https://www.qfeng.cloud,https://qfeng.cloud,http://localhost:8081,http://localhost:8787,null"
 
 [[d1_databases]]
 binding = "DB"

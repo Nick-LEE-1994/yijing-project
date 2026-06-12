@@ -1,11 +1,23 @@
 const DEFAULT_CORS_ORIGINS = [
   "http://localhost:8081",
   "http://localhost:8787",
+  "null",
 ];
+const QUESTION_MAX_LENGTH = 300;
+const LOGIN_WINDOW_MS = 10 * 60 * 1000;
+const LOGIN_MAX_FAILURES = 8;
+const loginFailures = new Map();
 
 export default {
   async fetch(request, env) {
     try {
+      if (!isAllowedOrigin(request, env)) {
+        return new Response(JSON.stringify({ error: "请求来源不被允许" }), {
+          status: 403,
+          headers: { "Content-Type": "application/json; charset=utf-8" },
+        });
+      }
+
       if (request.method === "OPTIONS") {
         return new Response(null, { status: 204, headers: corsHeaders(request, env) });
       }
@@ -105,15 +117,22 @@ async function handleLogin(request, env) {
   const data = await readJson(request);
   const username = String(data.username || "").trim();
   const password = String(data.password || "");
+  const loginKey = `${request.headers.get("CF-Connecting-IP") || "local"}:${username}`;
+
+  if (isLoginLimited(loginKey)) {
+    return json(request, env, { error: "登录尝试过于频繁，请稍后再试" }, 429);
+  }
 
   const user = await env.DB.prepare(
     "SELECT id, username, password_hash FROM users WHERE username = ?"
   ).bind(username).first();
 
   if (!user || !(await verifyPassword(password, user.password_hash))) {
+    recordLoginFailure(loginKey);
     return json(request, env, { error: "用户名或密码错误" }, 401);
   }
 
+  clearLoginFailure(loginKey);
   const token = await createToken(env, user.id, user.username);
   return json(request, env, {
     token,
@@ -139,16 +158,22 @@ async function handleUserInfo(request, env, user) {
 
 async function handleDivine(request, env, user) {
   const data = await readJson(request);
-  const question = String(data.question || "");
+  const question = String(data.question || "").trim();
+  const category = normalizeCategory(data.category);
+  const clientVersion = String(data.client_version || "").slice(0, 80);
   const hexagramData = data.hexagram_data || {};
 
   if (!question) {
     return json(request, env, { error: "请输入您的问题" }, 400);
   }
+  if (question.length > QUESTION_MAX_LENGTH) {
+    return json(request, env, { error: `问题最多 ${QUESTION_MAX_LENGTH} 字，请精简后再起卦` }, 400);
+  }
 
   const dailyLimit = getInt(env.DAILY_AI_LIMIT, 10);
-  const todayCount = await getDailyCount(env, user.user_id);
-  if (todayCount >= dailyLimit) {
+  const usageDate = todayChinaDate();
+  const reservedCount = await reserveDailyUsage(env, user.user_id, usageDate, dailyLimit);
+  if (!reservedCount) {
     return json(request, env, {
       error: `今日 AI 解读次数已用完（每日 ${dailyLimit} 次），请明天再试。`,
       remaining: 0,
@@ -157,31 +182,33 @@ async function handleDivine(request, env, user) {
 
   let aiResponse;
   try {
-    const prompts = buildPrompts(question, hexagramData);
+    const promptQuestion = category ? `【分类：${category}】${question}` : question;
+    const prompts = buildPrompts(promptQuestion, hexagramData);
     aiResponse = await callDeepSeek(env, prompts.system, prompts.user);
     aiResponse = normalizeAiResponse(aiResponse);
   } catch (error) {
+    await refundDailyUsage(env, user.user_id, usageDate);
     const message = String(error.message || error);
     const status = message.includes("timeout") || message.includes("超时") ? 504 : 502;
     return json(request, env, { error: `AI 服务调用失败：${message}` }, status);
   }
 
-  const usageDate = todayChinaDate();
-  const [saved] = await env.DB.batch([
-    env.DB.prepare(
-      "INSERT INTO divinations (user_id, question, hexagram_data, ai_response) VALUES (?, ?, ?, ?)"
-    ).bind(user.user_id, question, JSON.stringify(hexagramData), aiResponse),
-    env.DB.prepare(
-      "INSERT INTO daily_usage (user_id, usage_date, count) VALUES (?, ?, 1) " +
-        "ON CONFLICT(user_id, usage_date) DO UPDATE SET count = count + 1"
-    ).bind(user.user_id, usageDate),
-  ]);
+  const saved = await env.DB.prepare(
+    "INSERT INTO divinations (user_id, question, hexagram_data, ai_response, category, client_version, created_date_cn) VALUES (?, ?, ?, ?, ?, ?, ?)"
+  ).bind(
+    user.user_id,
+    question,
+    JSON.stringify(hexagramData),
+    aiResponse,
+    category,
+    clientVersion,
+    usageDate
+  ).run();
 
-  const usedCount = await getDailyCount(env, user.user_id, usageDate);
   return json(request, env, {
     ai_response: aiResponse,
     record_id: saved.meta.last_row_id,
-    remaining: Math.max(dailyLimit - usedCount, 0),
+    remaining: Math.max(dailyLimit - reservedCount, 0),
   });
 }
 
@@ -190,14 +217,27 @@ async function handleHistory(request, env, user) {
   const page = Math.max(getInt(url.searchParams.get("page"), 1), 1);
   const pageSize = Math.min(Math.max(getInt(url.searchParams.get("page_size"), 20), 1), 50);
   const offset = (page - 1) * pageSize;
+  const category = normalizeCategory(url.searchParams.get("category"));
+  const q = String(url.searchParams.get("q") || "").trim();
+
+  const where = ["user_id = ?"];
+  const binds = [user.user_id];
+  if (category) {
+    where.push("category = ?");
+    binds.push(category);
+  }
+  if (q) {
+    where.push("question LIKE ?");
+    binds.push(`%${q.slice(0, 80)}%`);
+  }
+  const whereSql = where.join(" AND ");
 
   const totalRow = await env.DB.prepare(
-    "SELECT COUNT(*) AS total FROM divinations WHERE user_id = ?"
-  ).bind(user.user_id).first();
+    `SELECT COUNT(*) AS total FROM divinations WHERE ${whereSql}`
+  ).bind(...binds).first();
   const records = await env.DB.prepare(
-    "SELECT id, question, created_at FROM divinations WHERE user_id = ? " +
-      "ORDER BY created_at DESC LIMIT ? OFFSET ?"
-  ).bind(user.user_id, pageSize, offset).all();
+    `SELECT id, question, category, created_at, created_date_cn FROM divinations WHERE ${whereSql} ORDER BY created_at DESC LIMIT ? OFFSET ?`
+  ).bind(...binds, pageSize, offset).all();
 
   return json(request, env, {
     records: records.results || [],
@@ -209,7 +249,7 @@ async function handleHistory(request, env, user) {
 
 async function handleHistoryDetail(request, env, user, id) {
   const row = await env.DB.prepare(
-    "SELECT id, question, hexagram_data, ai_response, created_at " +
+    "SELECT id, question, hexagram_data, ai_response, category, client_version, created_date_cn, created_at " +
       "FROM divinations WHERE id = ? AND user_id = ?"
   ).bind(id, user.user_id).first();
 
@@ -237,6 +277,57 @@ async function withAuth(request, env, handler) {
   return handler(request, env, payload);
 }
 
+
+function normalizeCategory(value) {
+  const category = String(value || "").trim();
+  const allowed = new Set(["事业", "感情", "财运", "学业", "健康", "其他"]);
+  return allowed.has(category) ? category : "";
+}
+
+async function reserveDailyUsage(env, userId, usageDate, dailyLimit) {
+  const result = await env.DB.prepare(
+    "INSERT INTO daily_usage (user_id, usage_date, count) VALUES (?, ?, 1) " +
+      "ON CONFLICT(user_id, usage_date) DO UPDATE SET count = count + 1 WHERE count < ?"
+  ).bind(userId, usageDate, dailyLimit).run();
+  if (!result.meta || result.meta.changes === 0) {
+    return 0;
+  }
+  const row = await env.DB.prepare(
+    "SELECT count FROM daily_usage WHERE user_id = ? AND usage_date = ?"
+  ).bind(userId, usageDate).first();
+  return row ? Number(row.count) : 0;
+}
+
+async function refundDailyUsage(env, userId, usageDate) {
+  await env.DB.prepare(
+    "UPDATE daily_usage SET count = MAX(count - 1, 0) WHERE user_id = ? AND usage_date = ?"
+  ).bind(userId, usageDate).run();
+}
+
+function isLoginLimited(key) {
+  const entry = loginFailures.get(key);
+  if (!entry) return false;
+  if (Date.now() - entry.firstAt > LOGIN_WINDOW_MS) {
+    loginFailures.delete(key);
+    return false;
+  }
+  return entry.count >= LOGIN_MAX_FAILURES;
+}
+
+function recordLoginFailure(key) {
+  const now = Date.now();
+  const entry = loginFailures.get(key);
+  if (!entry || now - entry.firstAt > LOGIN_WINDOW_MS) {
+    loginFailures.set(key, { count: 1, firstAt: now });
+    return;
+  }
+  entry.count += 1;
+}
+
+function clearLoginFailure(key) {
+  loginFailures.delete(key);
+}
+
 async function readJson(request) {
   try {
     return await request.json();
@@ -253,6 +344,19 @@ function json(request, env, body, status = 200) {
       ...corsHeaders(request, env),
     },
   });
+}
+
+function isAllowedOrigin(request, env) {
+  const requestOrigin = request.headers.get("Origin") || "";
+  if (!requestOrigin) {
+    return true;
+  }
+  const configured = String(env.CORS_ORIGINS || "")
+    .split(",")
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+  const origins = configured.length ? configured : DEFAULT_CORS_ORIGINS;
+  return origins.includes("*") || origins.includes(requestOrigin);
 }
 
 function corsHeaders(request, env) {
