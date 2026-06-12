@@ -1,87 +1,84 @@
-# Public Deployment
+# Cloudflare Deployment
 
-This project uses Tencent Cloud SCF for the Flask API and Tencent Cloud COS
-static website hosting for `index.html`.
+This project now uses a single deployment path:
 
-## 1. Rotate Exposed Secrets
+- `index.html` for the static frontend
+- Cloudflare Workers for the API
+- Cloudflare D1 for persistence
 
-Several secrets were previously present in source files. Before publishing,
-rotate them in Tencent Cloud / DeepSeek / database:
+Legacy deployment files have been removed.
 
-- Tencent Cloud API key pair
-- DeepSeek API key
-- Database password
-- Production JWT secret
-
-Do not put the new values in source files. Set them as environment variables.
-
-## 2. Configure Environment
-
-Copy `.env.example` to your shell profile or set the variables in the current
-PowerShell session. Required variables:
+## 1. Install Worker Dependencies
 
 ```powershell
-$env:TENCENT_SECRET_ID="..."
-$env:TENCENT_SECRET_KEY="..."
-$env:TENCENT_APP_ID="..."
-$env:DEEPSEEK_API_KEY="..."
-$env:DB_HOST="..."
-$env:DB_PASSWORD="..."
-$env:JWT_SECRET="..."
+cd worker
+npm install
 ```
 
-Keep `CORS_ORIGINS` as `http://localhost:8081` for the first backend deploy.
-After COS deployment, append the COS website URL and redeploy SCF config.
+## 2. Configure D1
 
-## 3. Build And Deploy Backend
+Create the D1 database if it does not already exist:
 
 ```powershell
-python rebuild_v4.py
-python deploy_scf.py
+npx wrangler d1 create yijing-project
 ```
 
-`deploy_scf.py` creates or updates the SCF Web Function, updates runtime
-environment variables, and ensures the function URL trigger exists.
+Copy the returned `database_id` into `worker/wrangler.toml`, then apply the schema:
 
-Health check:
+```powershell
+npx wrangler d1 migrations apply yijing-project --remote
+```
+
+## 3. Configure Secrets
+
+Production secrets are stored in Cloudflare, not in source files:
+
+```powershell
+npx wrangler secret put DEEPSEEK_API_KEY
+npx wrangler secret put JWT_SECRET
+```
+
+For local development, create `worker/.dev.vars`:
 
 ```text
-https://<scf-url>/api/health
+DEEPSEEK_API_KEY=your-deepseek-api-key
+JWT_SECRET=dev-only-change-me
 ```
 
-`status: degraded` is acceptable only when the database status is understood
-and expected during setup.
-
-## 4. Deploy Frontend To COS
+## 4. Deploy Worker
 
 ```powershell
-python deploy_frontend_cos.py
+npx wrangler deploy
 ```
 
-The script creates or reuses the bucket, enables static website hosting, uploads
-`index.html`, and prints the public website URL:
+The configured routes in `worker/wrangler.toml` serve the API at:
 
 ```text
-https://<bucket>-<appid>.cos-website.ap-chengdu.myqcloud.com
+https://qfeng.cloud/api/*
+https://www.qfeng.cloud/api/*
 ```
 
-## 5. Tighten CORS
+## 5. Serve Frontend
 
-Set `CORS_ORIGINS` to both local development and the COS website URL, then run
-`python deploy_scf.py` again:
+The root `index.html` is the only frontend entry file. For local checks:
 
 ```powershell
-$env:CORS_ORIGINS="http://localhost:8081,https://<bucket>-<appid>.cos-website.ap-chengdu.myqcloud.com"
-python deploy_scf.py
+python -m http.server 8081
 ```
+
+Open:
+
+```text
+http://localhost:8081
+```
+
+When opened from `localhost` or `file:`, the page uses `https://www.qfeng.cloud` as the API base. In production on `qfeng.cloud` or `www.qfeng.cloud`, API calls use the current origin.
 
 ## 6. Acceptance Checks
 
-- Open the COS website URL and confirm the first screen renders.
+- `GET /api/health` returns JSON from the Worker.
 - Register and log in with a test account.
-- Run one divination while logged in and confirm `/api/divine` returns an AI
-  response and decrements the quota.
+- Run one divination and confirm `/api/divine` returns an AI response and decrements the quota.
 - Open history and a history detail.
 - Confirm browser console has no CORS or JavaScript errors.
-- Confirm source scan contains no real Tencent, DeepSeek, database, or JWT
-  secrets.
+- Confirm source scan has no legacy cloud, SQL backend, Flask, or `server/` runtime references.

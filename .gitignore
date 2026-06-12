@@ -13,7 +13,6 @@ __pycache__/
 .venv/
 venv/
 env/
-scf_build_v2/
 
 # Local environment files
 .env
