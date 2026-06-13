@@ -121,6 +121,15 @@ function gzAnnotation(gz){
 }
 
 /* ===== Build Result ===== */
+const RESULT_NAV_ITEMS=[
+  {id:'ai-section',label:'解读',hint:'综合判断'},
+  {id:'hex-section',label:'现状',hint:'本卦处境'},
+  {id:'moving-section',label:'动爻',hint:'变化焦点'},
+  {id:'trend-section',label:'趋势',hint:'变卦走向'},
+  {id:'classic-section',label:'原文',hint:'卦辞象辞'},
+  {id:'time-section',label:'象数',hint:'时空五行'}
+];
+
 function buildResult(q,dv,options){
   options=options||{};
   const{solar,lunar,ganzhi,upper,lower,movingYao}=dv;
@@ -134,8 +143,10 @@ function buildResult(q,dv,options){
   let h='';
 
   h+=`<div class="result-intro">`;
+  h+=`<div class="result-meta-row">`;
   h+=`<div class="result-kicker">所问</div>`;
   if(category)h+=`<div class="result-category">${esc(category)}</div>`;
+  h+=`</div>`;
   h+=`<div class="result-question">${esc(q)}</div>`;
   h+=`</div>`;
   h+=`<div class="result-disclaimer">卦象解读仅供娱乐参考，请勿作为现实决策依据。</div>`;
@@ -154,20 +165,17 @@ function buildResult(q,dv,options){
 
   h+=`<nav class="result-nav" aria-label="结果模块导航">`;
   h+=`<div class="result-nav-title">当前位置</div>`;
+  h+=`<button class="result-nav-back" type="button" onclick="resetApp()">返回</button>`;
   h+=`<div class="result-nav-list">`;
-  h+=`<button class="result-nav-link active" type="button" data-nav-target="ai-section">解读</button>`;
-  h+=`<button class="result-nav-link" type="button" data-nav-target="hex-section">现状</button>`;
-  h+=`<button class="result-nav-link" type="button" data-nav-target="moving-section">动爻</button>`;
-  h+=`<button class="result-nav-link" type="button" data-nav-target="trend-section">趋势</button>`;
-  h+=`<button class="result-nav-link" type="button" data-nav-target="classic-section">原文</button>`;
-  h+=`<button class="result-nav-link" type="button" data-nav-target="time-section">象数</button>`;
+  RESULT_NAV_ITEMS.forEach((item,index)=>{
+    h+=`<button class="result-nav-link${index===0?' active':''}" type="button" data-nav-target="${item.id}"><span class="nav-label">${item.label}</span><span class="nav-hint">${item.hint}</span></button>`;
+  });
   h+=`</div></nav>`;
 
   h+=`<div class="reading-path">`;
-  h+=`<button class="path-step" type="button" data-nav-target="hex-section"><strong>1 本卦</strong>先看当下处境</button>`;
-  h+=`<button class="path-step" type="button" data-nav-target="moving-section"><strong>2 动爻</strong>再看变化焦点</button>`;
-  h+=`<button class="path-step" type="button" data-nav-target="trend-section"><strong>3 变卦</strong>判断后续趋势</button>`;
-  h+=`<button class="path-step" type="button" data-nav-target="classic-section"><strong>4 原文</strong>回看卦辞象辞</button>`;
+  RESULT_NAV_ITEMS.forEach((item,index)=>{
+    h+=`<button class="path-step" type="button" data-nav-target="${item.id}"><strong>${index+1} ${item.label}</strong>${item.hint}</button>`;
+  });
   h+=`</div>`;
 
   // --- Hexagram Display ---
@@ -356,7 +364,11 @@ async function callAI(q,mg,bg,my,dv){
 /* ===== UI Controller ===== */
 let cur=null;
 let resultNavObserver=null;
-const RESULT_SECTION_IDS=['ai-section','hex-section','moving-section','trend-section','classic-section','time-section'];
+const RESULT_SECTION_IDS=RESULT_NAV_ITEMS.map(item=>item.id);
+
+function setResultView(active){
+  document.body.classList.toggle('result-view',!!active);
+}
 
 function clearResultNavigation(){
   if(resultNavObserver){resultNavObserver.disconnect();resultNavObserver=null}
@@ -366,11 +378,21 @@ function setActiveResultSection(id){
   document.querySelectorAll('[data-nav-target]').forEach(el=>{
     el.classList.toggle('active',el.dataset.navTarget===id);
   });
+  if(window.matchMedia('(max-width: 820px)').matches){
+    const activeNav=document.querySelector(`.result-nav-link[data-nav-target="${id}"]`);
+    activeNav?.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'});
+  }
 }
 
 function resultScrollOffset(){
   const nav=document.querySelector('.result-nav');
-  if(nav&&getComputedStyle(nav).position==='sticky')return nav.offsetHeight+16;
+  if(nav&&window.matchMedia('(max-width: 820px)').matches){
+    const style=getComputedStyle(nav);
+    if(style.position==='sticky'||style.position==='fixed'){
+      const top=parseFloat(style.top)||0;
+      return nav.offsetHeight+top+12;
+    }
+  }
   return 88;
 }
 
@@ -458,6 +480,7 @@ function startDivine(){
     rs.style.display='';
     rs.innerHTML=cur.html;
     rs.classList.add('show');
+    setResultView(true);
     initResultNavigation();
     window.scrollTo({top:0,behavior:'smooth'});
 
@@ -469,6 +492,7 @@ function startDivine(){
 function resetApp(){
   const rs=document.getElementById('result-state'),inp=document.getElementById('input-state');
   clearResultNavigation();
+  setResultView(false);
   rs.classList.remove('show');
   setTimeout(()=>{
     rs.style.display='';rs.innerHTML='';rs.className='';
@@ -997,6 +1021,7 @@ function startDivine(){
     const rs=document.getElementById('result-state');
     rs.innerHTML=cur.html;
     rs.className='show';
+    setResultView(true);
     initResultNavigation();
     if(localStorage.getItem('yj_token'))callAI(cur.q,cur.mg,cur.bg,cur.my,cur.dv);
     window.scrollTo({top:0,behavior:'smooth'});
@@ -1119,6 +1144,7 @@ function showHistoryResult(record){
   const rs=document.getElementById('result-state');
   rs.innerHTML=cur.html;
   rs.className='show';
+  setResultView(true);
   initResultNavigation();
   window.scrollTo({top:0,behavior:'smooth'});
 }
