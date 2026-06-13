@@ -299,6 +299,17 @@ async function readJsonResponse(res){
   throw new Error('接口没有返回 JSON，请检查 API 地址：'+(BACKEND_URL||location.origin)+'。返回内容：'+preview);
 }
 
+function decodeJwtPayload(token){
+  const part=String(token||'').split('.')[1];
+  if(!part)throw new Error('Invalid token');
+  const base64=part.replace(/-/g,'+').replace(/_/g,'/');
+  const padded=base64.padEnd(Math.ceil(base64.length/4)*4,'=');
+  const binary=atob(padded);
+  const bytes=new Uint8Array(binary.length);
+  for(let i=0;i<binary.length;i++)bytes[i]=binary.charCodeAt(i);
+  return JSON.parse(new TextDecoder().decode(bytes));
+}
+
 /* ===== AI Call (via Backend) ===== */
 async function callAI(q,mg,bg,my,dv){
   const token=localStorage.getItem('yj_token');
@@ -611,7 +622,7 @@ function updateQuota(remaining){
   document.getElementById('btn-history').style.display='';
   // Decode username from JWT payload (base64)
   try{
-    const payload=JSON.parse(atob(token.split('.')[1]));
+    const payload=decodeJwtPayload(token);
     document.getElementById('uname').textContent=payload.username||'';
     currentUser={id:payload.user_id,username:payload.username};
   }catch(e){}
@@ -953,7 +964,7 @@ function validateTokenFreshness(){
   const token=localStorage.getItem('yj_token');
   if(!token)return false;
   try{
-    const payload=JSON.parse(atob(token.split('.')[1]));
+    const payload=decodeJwtPayload(token);
     if(payload.exp&&payload.exp*1000<Date.now()){doLogout();return false}
     return true;
   }catch(_){doLogout();return false}
