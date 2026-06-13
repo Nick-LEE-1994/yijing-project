@@ -352,7 +352,7 @@ button,input,textarea{font:inherit}
 
 @media(max-width:600px){
   :root{--mobile-userbar-space:3.65rem}
-  #input-state{justify-content:flex-start;padding:4.85rem .85rem 1.4rem}
+  #input-state{justify-content:center;min-height:100svh;padding:calc(var(--mobile-userbar-space) + env(safe-area-inset-top,.45rem)) .85rem calc(1.15rem + env(safe-area-inset-bottom,0px))}
   .page-title{font-size:1.82rem;letter-spacing:.14em;margin-bottom:.24rem}
   .page-subtitle{font-size:.78rem;margin-bottom:.95rem;letter-spacing:.12em}
   .page-subtitle::after{width:34px;margin:.55rem auto 0}
@@ -419,9 +419,26 @@ button,input,textarea{font:inherit}
   .auth-panel{padding:1.25rem}
 }
 
+@supports (height:100dvh){
+  @media(max-width:600px){
+    #input-state{min-height:100dvh}
+  }
+}
+
+@media(max-width:600px) and (max-height:700px){
+  #input-state{justify-content:flex-start;padding-top:4.35rem;padding-bottom:.95rem}
+  .page-title{font-size:1.72rem;margin-bottom:.18rem}
+  .page-subtitle{margin-bottom:.72rem}
+  .page-subtitle::after{margin-top:.42rem}
+  .input-box textarea{min-height:108px}
+  .question-assist{margin-top:.36rem}
+  .btn-divine{margin-top:.5rem}
+  .input-hint{margin-top:.48rem}
+}
+
 @media(max-width:380px){
   :root{--mobile-userbar-space:4.05rem}
-  #input-state{padding-top:4.45rem}
+  #input-state{padding-top:calc(var(--mobile-userbar-space) + env(safe-area-inset-top,.35rem))}
   .page-title{font-size:1.68rem}
   .page-subtitle{font-size:.74rem;margin-bottom:.72rem}
   .category-chip{min-height:27px;font-size:.7rem}

@@ -785,7 +785,7 @@ function renderAIContent(markdown){
 }
 
 /* ===== Enhancements: UX, accessibility, history tools ===== */
-const CLIENT_VERSION = 'frontend-20260613-2';
+const CLIENT_VERSION = 'frontend-20260613-3';
 const QUESTION_MAX_LENGTH = 300;
 const HISTORY_PAGE_SIZE = 10;
 let historyState = { page: 1, total: 0, q: '', category: '' };
