@@ -352,25 +352,27 @@ button,input,textarea{font:inherit}
 
 @media(max-width:600px){
   :root{--mobile-userbar-space:3.65rem}
-  #input-state{justify-content:flex-start;padding:7rem 1rem 2.5rem}
-  .page-title{font-size:2rem;letter-spacing:.15em}
-  .page-subtitle{font-size:.84rem;margin-bottom:1.65rem}
-  .input-box{padding:.45rem}
-  .question-categories{grid-template-columns:repeat(2,minmax(0,1fr));gap:.32rem}
-  .category-chip{min-height:32px;font-size:.76rem}
-  .input-box textarea{min-height:156px;padding:1.05rem;font-size:.96rem}
-  .question-assist{padding:.6rem}
-  .template-row{grid-template-columns:repeat(3,minmax(0,1fr));gap:.28rem}
-  .template-chip{min-height:28px;padding:.18rem .22rem;text-align:center;font-size:0}
+  #input-state{justify-content:flex-start;padding:4.85rem .85rem 1.4rem}
+  .page-title{font-size:1.82rem;letter-spacing:.14em;margin-bottom:.24rem}
+  .page-subtitle{font-size:.78rem;margin-bottom:.95rem;letter-spacing:.12em}
+  .page-subtitle::after{width:34px;margin:.55rem auto 0}
+  .input-box{padding:.38rem}
+  .question-categories{grid-template-columns:repeat(3,minmax(0,1fr));gap:.26rem;margin-bottom:.38rem}
+  .category-chip{min-height:29px;font-size:.74rem}
+  .input-box textarea{min-height:116px;padding:.78rem .9rem;font-size:.92rem;line-height:1.58}
+  .question-assist{gap:.28rem;margin:.42rem .04rem 0;padding:.46rem}
+  .assist-label,.question-count{font-size:.68rem}
+  .template-row{grid-template-columns:repeat(3,minmax(0,1fr));gap:.22rem}
+  .template-chip{min-height:25px;padding:.14rem .18rem;text-align:center;font-size:0}
   .template-chip::before{display:none}
-  .template-chip::after{font-size:.72rem;line-height:1;letter-spacing:.02em}
+  .template-chip::after{font-size:.69rem;line-height:1;letter-spacing:.02em}
   .template-chip:nth-child(1)::after{content:'选择'}
   .template-chip:nth-child(2)::after{content:'推进'}
   .template-chip:nth-child(3)::after{content:'关系'}
-  .question-help{white-space:normal;overflow:visible;text-overflow:clip}
-  .question-feedback{font-size:.78rem}
-  .btn-divine{width:100%;max-width:210px;padding:.72rem 1rem}
-  .input-hint{font-size:.76rem;line-height:1.7}
+  .question-help{font-size:.68rem;line-height:1.45;white-space:normal;overflow:visible;text-overflow:clip}
+  .question-feedback{font-size:.74rem;line-height:1.55;padding:.42rem .48rem}
+  .btn-divine{width:100%;max-width:190px;margin:.62rem auto .05rem;padding:.6rem 1rem;font-size:.96rem}
+  .input-hint{margin-top:.68rem;font-size:.7rem;line-height:1.45}
   .user-bar{top:.75rem;right:.75rem;left:.75rem;justify-content:flex-end;gap:.4rem;flex-wrap:wrap}
   .user-info{max-width:100%;gap:.38rem;padding:.3rem .52rem}
   .user-info .uname{max-width:7rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -419,6 +421,15 @@ button,input,textarea{font:inherit}
 
 @media(max-width:380px){
   :root{--mobile-userbar-space:4.05rem}
+  #input-state{padding-top:4.45rem}
+  .page-title{font-size:1.68rem}
+  .page-subtitle{font-size:.74rem;margin-bottom:.72rem}
+  .category-chip{min-height:27px;font-size:.7rem}
+  .input-box textarea{min-height:104px;padding:.68rem .78rem;font-size:.88rem}
+  .question-assist{padding:.4rem}
+  .question-help{font-size:.66rem}
+  .btn-divine{max-width:176px;padding:.54rem .9rem}
+  .input-hint{margin-top:.52rem}
   .result-nav-link{flex-basis:4.45rem;padding:.3rem .32rem}
   .nav-label{font-size:.74rem}
   .nav-hint{font-size:.6rem}

@@ -785,7 +785,7 @@ function renderAIContent(markdown){
 }
 
 /* ===== Enhancements: UX, accessibility, history tools ===== */
-const CLIENT_VERSION = 'frontend-20260613-1';
+const CLIENT_VERSION = 'frontend-20260613-2';
 const QUESTION_MAX_LENGTH = 300;
 const HISTORY_PAGE_SIZE = 10;
 let historyState = { page: 1, total: 0, q: '', category: '' };
@@ -889,11 +889,12 @@ function setQuestionFeedback(result){
     el.hidden=true;
     el.textContent='';
     el.className='question-feedback';
-    return;
+    return null;
   }
   el.hidden=false;
   el.textContent=result.message||INTAKE_MESSAGES.fallback;
   el.className='question-feedback '+result.type;
+  return el;
 }
 
 function getFavoriteIds(){
@@ -1112,8 +1113,11 @@ function startDivine(){
   if(q.length>QUESTION_MAX_LENGTH){input.focus();return}
   const intake=classifyQuestionIntent(q,getSelectedCategory());
   if(intake.type!=='divine'){
-    setQuestionFeedback(intake);
-    input.focus();
+    const feedbackEl=setQuestionFeedback(intake);
+    input.blur();
+    if(feedbackEl){
+      setTimeout(()=>feedbackEl.scrollIntoView({block:'center',behavior:'smooth'}),80);
+    }
     return;
   }
   setQuestionFeedback(null);
