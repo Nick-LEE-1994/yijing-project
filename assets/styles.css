@@ -61,6 +61,11 @@ button,input,textarea{font:inherit}
 .question-count{font-size:.72rem;color:var(--ink-faint);white-space:nowrap}
 .question-count.warn{color:var(--vermillion)}
 .question-help{font-size:.72rem;line-height:1.6;color:var(--ink-faint);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.question-feedback{font-family:'Noto Serif SC',serif;font-size:.82rem;line-height:1.8;padding:.58rem .68rem;border-radius:6px;border:1px solid var(--border-light);background:rgba(255,253,248,.74);color:var(--ink-light)}
+.question-feedback[hidden]{display:none}
+.question-feedback.clarify{border-color:var(--gold-light);background:var(--gold-bg);color:#765719}
+.question-feedback.direct{border-color:var(--green-light);background:rgba(79,115,85,.08);color:var(--green-pine)}
+.question-feedback.blocked{border-color:var(--vermillion-light);background:var(--vermillion-bg);color:var(--vermillion-dark)}
 
 .btn-divine{display:block;margin:1rem auto .1rem;padding:.78rem 3.2rem;background:var(--vermillion);color:#fff;border:none;border-radius:6px;font-family:'Noto Serif SC',serif;font-size:1.05rem;letter-spacing:.22em;cursor:pointer;box-shadow:0 10px 24px rgba(185,67,72,.22);transition:background .25s,transform .15s,box-shadow .25s}
 .btn-divine:hover{background:var(--vermillion-dark);box-shadow:0 12px 28px rgba(150,53,59,.25)}
@@ -363,6 +368,7 @@ button,input,textarea{font:inherit}
   .template-chip:nth-child(2)::after{content:'推进'}
   .template-chip:nth-child(3)::after{content:'关系'}
   .question-help{white-space:normal;overflow:visible;text-overflow:clip}
+  .question-feedback{font-size:.78rem}
   .btn-divine{width:100%;max-width:210px;padding:.72rem 1rem}
   .input-hint{font-size:.76rem;line-height:1.7}
   .user-bar{top:.75rem;right:.75rem;left:.75rem;justify-content:flex-end;gap:.4rem;flex-wrap:wrap}

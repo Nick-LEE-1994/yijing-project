@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>遇事不决·可问清风</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;600&family=Noto+Sans+SC:wght@300;400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/styles.css">
+<link rel="stylesheet" href="assets/styles.css?v=frontend-20260613-1">
 </head>
 <body>
 
@@ -44,6 +44,7 @@
         <button type="button" class="template-chip" data-template="我和对方/团队的关系最近……。想看看互动中的关键问题和合适的应对方式。">套用关系互动模板</button>
       </div>
       <div class="question-help" id="question-help">建议写清背景、选择项和最想判断的行动，解读会更聚焦。</div>
+      <div class="question-feedback" id="question-feedback" role="status" aria-live="polite" hidden></div>
     </div>
     <button class="btn-divine" id="btn-divine" onclick="startDivine()">起 卦</button>
   </div>
@@ -103,6 +104,6 @@
   <div class="history-detail" id="history-detail"></div>
 </aside>
 
-<script src="assets/app.js" defer></script>
+<script src="assets/app.js?v=frontend-20260613-1" defer></script>
 </body>
 </html>

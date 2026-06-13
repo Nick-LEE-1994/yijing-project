@@ -169,6 +169,14 @@ async function handleDivine(request, env, user) {
   if (question.length > QUESTION_MAX_LENGTH) {
     return json(request, env, { error: `问题最多 ${QUESTION_MAX_LENGTH} 字，请精简后再起卦` }, 400);
   }
+  const intake = classifyQuestionIntent(question, category);
+  if (intake.type !== "divine") {
+    return json(request, env, {
+      code: intake.code,
+      error: intake.message,
+      intake: intake.type,
+    }, 422);
+  }
 
   const dailyLimit = getInt(env.DAILY_AI_LIMIT, 10);
   const usageDate = todayChinaDate();
@@ -282,6 +290,97 @@ function normalizeCategory(value) {
   const category = String(value || "").trim();
   const allowed = new Set(["事业", "感情", "财运", "学业", "健康", "其他"]);
   return allowed.has(category) ? category : "";
+}
+
+const INTAKE_MESSAGES = {
+  clarify: "此问尚未成形，难以据象而断。请补充事情背景、所忧之处，或你想判断的下一步行动。",
+  direct: "此事有明确信息可查，不宜以卦代证。建议先取现实资料为准；若你想问“该如何应对这个变化”，则可重新起问。",
+  blocked: "此问不合适在此处解读。若你愿意，可以改问个人处境、情绪整理或行动取舍之类的问题。",
+  fallback: "此问尚偏散，卦象难以落处。可试着写成：“我现在面临……，想判断……是否适合继续/推进/等待。”",
+};
+
+function normalizeQuestion(value) {
+  const raw = String(value || "").trim().replace(/\s+/g, " ");
+  const compact = raw
+    .replace(/[？?]+/g, "?")
+    .replace(/[！!]+/g, "!")
+    .replace(/[。．.]+/g, ".")
+    .replace(/[，、,]+/g, ",")
+    .replace(/\s+/g, "")
+    .toLowerCase();
+  return { raw, compact };
+}
+
+function getQuestionStats(value) {
+  const chars = [...value];
+  const length = chars.length;
+  const chineseCount = (value.match(/[\u4e00-\u9fff]/g) || []).length;
+  const letterCount = (value.match(/[a-z]/gi) || []).length;
+  const digitCount = (value.match(/\d/g) || []).length;
+  const symbolCount = Math.max(length - chineseCount - letterCount - digitCount, 0);
+  const uniqueCharCount = new Set(chars).size;
+  const repeatRatio = length ? 1 - uniqueCharCount / length : 0;
+  return { length, chineseCount, letterCount, digitCount, symbolCount, uniqueCharCount, repeatRatio };
+}
+
+function hasAnyPattern(text, patterns) {
+  return patterns.some((pattern) => pattern.test(text));
+}
+
+function scoreDivinationIntent(text, category) {
+  let score = 0;
+  if (hasAnyPattern(text, [/是否|能否|可否|会不会|该不该|要不要|需不需要|适不适合|合不合适|值不值得|能不能|有没有机会/])) score += 2;
+  if (hasAnyPattern(text, [/怎么办|如何处理|怎么处理|怎么选择|如何选择|怎么推进|如何推进|怎么应对|如何应对|下一步|该怎么做/])) score += 2;
+  if (hasAnyPattern(text, [/事业|工作|职场|感情|关系|财运|财富|学业|考试|健康|合作|项目|婚姻|恋爱|家庭|同事|领导|客户|朋友|对方|创业|投资|生意/])) score += 2;
+  if (hasAnyPattern(text, [/选择|取舍|纠结|犹豫|担心|困惑|焦虑|机会|阻力|时机|趋势|结果|推进|继续|放弃|等待|转机|变化|顺利|成不成/])) score += 1;
+  if ([...text].length >= 8) score += 1;
+  if (category && category !== "其他") score += 1;
+  return score;
+}
+
+function classifyQuestionIntent(question, category) {
+  const { raw, compact: text } = normalizeQuestion(question);
+  const stats = getQuestionStats(text);
+  if (!raw) return { type: "clarify", code: "clarify", message: INTAKE_MESSAGES.clarify, score: 0 };
+
+  const blockedPatterns = [
+    /杀人|伤害他人|报复社会|下毒|投毒|制毒|贩毒|诈骗|洗钱|盗号|破解账号|开盒|人肉搜索/,
+    /炸药|爆炸物|枪支|恐怖袭击|极端组织/,
+    /色情|裸聊|约炮|嫖|卖淫|强奸|迷奸|偷拍视频|成人视频|未成年.*性|性.*未成年/,
+    /涉政|颠覆|煽动|分裂国家|推翻政府|政治运动/,
+    /仇恨|种族灭绝|纳粹|辱骂.*群体/,
+  ];
+  if (hasAnyPattern(text, blockedPatterns)) {
+    return { type: "blocked", code: "blocked", message: INTAKE_MESSAGES.blocked, score: 0 };
+  }
+
+  const intentScore = scoreDivinationIntent(text, category);
+  const hasQuestionSignal = intentScore >= 2 || /[?吗呢]$/.test(text);
+  const isPureSymbol = stats.length > 0 && stats.symbolCount === stats.length;
+  const symbolHeavy = stats.length >= 4 && stats.symbolCount / stats.length > 0.6;
+  const repeatedInput = stats.length >= 4 && stats.uniqueCharCount <= 2;
+  const keyboardMash = /^[a-z]{5,}\d*$/.test(text) && !hasAnyPattern(text, [/what|why|how|when|should|can|will/]);
+  const casualOnly = /^(你好|您好|哈+|哈哈+|啊+|额+|嗯+|哦+|喂+|hi|hello|test|测试|测试一下|随便|随便看看|看看|试试|在吗)$/.test(text);
+  if ((stats.length < 4 && !hasQuestionSignal) || isPureSymbol || symbolHeavy || repeatedInput || keyboardMash || casualOnly) {
+    return { type: "clarify", code: "clarify", message: INTAKE_MESSAGES.clarify, score: intentScore };
+  }
+
+  const hasActionChoice = hasAnyPattern(text, [/是否|能否|该不该|要不要|适不适合|合不合适|怎么办|如何应对|怎么处理|怎么选择|是否还|还该|要不要继续|该如何/]);
+  const objectivePatterns = [
+    /天气|气温|下雨|下雪|空气质量|台风/,
+    /几点|现在时间|日期|星期几|今天几号|农历/,
+    /\d+\s*[+\-*/×÷]\s*\d+|等于多少|计算|换算/,
+    /翻译|怎么读|读音|拼音|解释这个词/,
+    /在哪里|怎么走|路线|导航|高铁|航班|快递/,
+    /股票价格|股价|汇率|金价|油价|币价/,
+    /新闻|发生了什么|谁是|是什么|百科|定义/,
+  ];
+  if (hasAnyPattern(text, objectivePatterns) && !hasActionChoice) {
+    return { type: "direct", code: "direct", message: INTAKE_MESSAGES.direct, score: intentScore };
+  }
+
+  if (intentScore >= 3) return { type: "divine", code: "divine", message: "", score: intentScore };
+  return { type: "clarify", code: "clarify", message: INTAKE_MESSAGES.fallback, score: intentScore };
 }
 
 async function reserveDailyUsage(env, userId, usageDate, dailyLimit) {
@@ -532,6 +631,8 @@ function buildPrompts(question, hd) {
     "留意项只写一个温和提醒，不要把风险提示写成与前三项平级的结论。",
     "卦象依据说明本卦如何对应问题，动爻变化说明动爻和变卦方向，时势补充说明五行时机。",
     "先给可执行建议，再解释卦理。不要编造不存在的卦辞爻辞。",
+    "不得输出违法犯罪、色情低俗、暴力伤害、涉政敏感或仇恨攻击内容；遇到这类方向，只做温和拒绝和安全改写建议。",
+    "涉及医疗、法律、投资等高风险现实决策时，必须说明仅作娱乐参考，不替代专业意见或现实证据。",
     "整体 320-520 字，短句优先，语言自然克制。",
   ].join("");
 

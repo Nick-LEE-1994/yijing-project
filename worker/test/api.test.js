@@ -250,3 +250,102 @@ test("daily AI limit is enforced before calling the model", async () => {
     globalThis.fetch = originalFetch;
   }
 });
+
+test("objective questions are rejected before model call or quota usage", async () => {
+  let modelCalls = 0;
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async () => {
+    modelCalls += 1;
+    return new Response(JSON.stringify({
+      choices: [{ message: { content: "不应调用" } }],
+    }), { status: 200, headers: { "Content-Type": "application/json" } });
+  };
+
+  try {
+    const testEnv = env({ DEEPSEEK_API_KEY: "sk-test", DAILY_AI_LIMIT: "1" });
+    const { token } = await register(testEnv);
+    const res = await worker.fetch(new Request("https://www.qfeng.cloud/api/divine", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}`, Origin: "https://www.qfeng.cloud" },
+      body: JSON.stringify({ question: "明天天气如何", category: "其他", hexagram_data: { movingYao: 1 } }),
+    }), testEnv);
+    assert.equal(res.status, 422);
+    const body = await json(res);
+    assert.equal(body.code, "direct");
+    assert.equal(modelCalls, 0);
+
+    const infoRes = await worker.fetch(new Request("https://www.qfeng.cloud/api/user/info", {
+      headers: { Authorization: `Bearer ${token}`, Origin: "https://www.qfeng.cloud" },
+    }), testEnv);
+    const info = await json(infoRes);
+    assert.equal(info.today_used, 0);
+    assert.equal(testEnv.DB.divinations.length, 0);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test("casual and noisy inputs ask for clarification", async () => {
+  const testEnv = env({ DEEPSEEK_API_KEY: "sk-test" });
+  const { token } = await register(testEnv);
+  for (const question of ["？？？？", "哈哈哈哈", "asdfgh"]) {
+    const res = await worker.fetch(new Request("https://www.qfeng.cloud/api/divine", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}`, Origin: "https://www.qfeng.cloud" },
+      body: JSON.stringify({ question, category: "其他", hexagram_data: { movingYao: 1 } }),
+    }), testEnv);
+    assert.equal(res.status, 422);
+    assert.equal((await json(res)).code, "clarify");
+  }
+});
+
+test("blocked questions are rejected before divination", async () => {
+  let modelCalls = 0;
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async () => {
+    modelCalls += 1;
+    return new Response(JSON.stringify({
+      choices: [{ message: { content: "不应调用" } }],
+    }), { status: 200, headers: { "Content-Type": "application/json" } });
+  };
+
+  try {
+    const testEnv = env({ DEEPSEEK_API_KEY: "sk-test" });
+    const { token } = await register(testEnv);
+    const res = await worker.fetch(new Request("https://www.qfeng.cloud/api/divine", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}`, Origin: "https://www.qfeng.cloud" },
+      body: JSON.stringify({ question: "如何诈骗别人", category: "其他", hexagram_data: { movingYao: 1 } }),
+    }), testEnv);
+    assert.equal(res.status, 422);
+    assert.equal((await json(res)).code, "blocked");
+    assert.equal(modelCalls, 0);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test("objective words with action choice can still enter divination", async () => {
+  let modelCalls = 0;
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async () => {
+    modelCalls += 1;
+    return new Response(JSON.stringify({
+      choices: [{ message: { content: "决策摘要：\n当前态势：可观\n关键阻力：天气\n建议动作：备选\n留意项：节奏" } }],
+    }), { status: 200, headers: { "Content-Type": "application/json" } });
+  };
+
+  try {
+    const testEnv = env({ DEEPSEEK_API_KEY: "sk-test" });
+    const { token } = await register(testEnv);
+    const res = await worker.fetch(new Request("https://www.qfeng.cloud/api/divine", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}`, Origin: "https://www.qfeng.cloud" },
+      body: JSON.stringify({ question: "明天下雨我是否还该去谈合作", category: "事业", hexagram_data: { movingYao: 1 } }),
+    }), testEnv);
+    assert.equal(res.status, 200);
+    assert.equal(modelCalls, 1);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
